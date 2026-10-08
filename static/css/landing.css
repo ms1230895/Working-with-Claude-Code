@@ -1,0 +1,191 @@
+/* ------------------------------------------------------------------ */
+/* Landing page — hero                                                 */
+/* Loaded after style.css, so these rules override the base hero ones. */
+/* ------------------------------------------------------------------ */
+
+.hero {
+    --hero-green: #4a9b76;
+    --hero-green-deep: #2e6b52;
+    --hero-green-tint: #e4f3ec;
+    --hero-green-line: #bfe0d0;
+    --hero-red: #d9463e;
+    --hero-gray: #8c8c8c;
+
+    display: block;
+    max-width: none;
+    background: var(--paper-card);
+    padding: 4.25rem 2rem 4.5rem;
+    text-align: center;
+}
+
+.hero-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    background: var(--hero-green-tint);
+    border: 1px solid var(--hero-green-line);
+    color: var(--hero-green-deep);
+    font-size: 1.05rem;
+    font-weight: 500;
+    padding: 0.3rem 1.25rem;
+    border-radius: 999px;
+    margin-bottom: 2.5rem;
+}
+
+.hero-pill-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--hero-green);
+}
+
+.hero-title {
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: clamp(2.25rem, 5.5vw, 4rem);
+    line-height: 1.12;
+    letter-spacing: -0.025em;
+    margin-bottom: 1.5rem;
+}
+
+.hero-title em {
+    font-style: normal;
+    color: var(--hero-green);
+}
+
+.hero-subtitle {
+    font-size: 1.4rem;
+    line-height: 1.63;
+    max-width: 37rem;
+    margin: 0 auto 2.75rem;
+}
+
+.hero-actions {
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.hero-actions .btn-primary {
+    font-size: 1.2rem;
+    font-weight: 600;
+    padding: 0.9rem 2.1rem;
+    border-radius: var(--radius-md);
+}
+
+/* ------------------------------------------------------------------ */
+/* Hero — app window mock                                              */
+/* ------------------------------------------------------------------ */
+
+.hero-window {
+    max-width: 850px;
+    margin: 4rem auto 0;
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    text-align: left;
+}
+
+.hero-window-dots {
+    display: flex;
+    gap: 0.55rem;
+    margin-bottom: 1.1rem;
+}
+
+.hero-window-dots span {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.hero-window-dots span:nth-child(1) { background: #e8a09a; }
+.hero-window-dots span:nth-child(2) { background: #f2c879; }
+.hero-window-dots span:nth-child(3) { background: #a9dfc8; }
+
+.hero-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.hero-stat,
+.hero-bars {
+    background: var(--paper-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+}
+
+.hero-stat { padding: 1.25rem 1.5rem; }
+
+.hero-stat-label {
+    font-size: 1rem;
+    line-height: 1.4;
+    color: var(--hero-gray);
+}
+
+.hero-stat-value {
+    font-size: 1.8rem;
+    font-weight: 500;
+    line-height: 1.25;
+    color: var(--ink);
+    margin: 0.25rem 0;
+}
+
+.hero-stat-note {
+    font-size: 1rem;
+    line-height: 1.4;
+    color: var(--ink-faint);
+}
+
+.hero-stat-note.is-up { color: var(--hero-red); }
+.hero-stat-note.is-good { color: var(--hero-green); }
+
+.hero-bars {
+    margin-top: 1rem;
+    padding: 1.1rem 1.4rem;
+    display: grid;
+    gap: 0.7rem;
+}
+
+.hero-bar-row {
+    display: grid;
+    grid-template-columns: 4rem 1fr;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.hero-bar-label {
+    font-size: 1.05rem;
+    line-height: 1.4;
+    color: var(--ink-muted);
+    text-align: center;
+}
+
+.hero-bar-track {
+    height: 10px;
+    background: var(--border-soft);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.hero-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+}
+
+.hero-bar-fill.is-food { background: #e5a23f; }
+.hero-bar-fill.is-travel { background: #4a86d8; }
+.hero-bar-fill.is-bills { background: #7c6fd1; }
+
+/* ------------------------------------------------------------------ */
+/* Hero — responsive                                                   */
+/* ------------------------------------------------------------------ */
+
+@media (max-width: 700px) {
+    .hero { padding: 3rem 1rem; }
+    .hero-pill { font-size: 0.85rem; margin-bottom: 1.75rem; }
+    .hero-subtitle { font-size: 1.1rem; margin-bottom: 2rem; }
+    .hero-actions .btn-primary { font-size: 1rem; padding: 0.8rem 1.5rem; }
+    .hero-window { margin-top: 3rem; padding: 1rem; }
+    .hero-stats { grid-template-columns: 1fr; }
+}
