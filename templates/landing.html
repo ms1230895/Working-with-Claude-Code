@@ -24,7 +24,7 @@
         </p>
         <div class="hero-actions">
             <a href="{{ url_for('register') }}" class="btn-primary">Create free account</a>
-            <a href="#how-it-works" class="btn-primary">See how it works</a>
+            <button type="button" class="btn-primary" id="how-it-works-open">See how it works</button>
         </div>
     </div>
     <div class="hero-window">
@@ -69,7 +69,6 @@
             </div>
         </div>
     </div>
-    <span id="how-it-works"></span>
 </section>
 
 <section class="features">
@@ -100,4 +99,24 @@
     </div>
 </section>
 
+<dialog class="video-modal" id="how-it-works-modal" aria-labelledby="video-modal-title">
+    <div class="video-modal-header">
+        <h2 class="video-modal-title" id="video-modal-title">See how Spendly works</h2>
+        <button type="button" class="video-modal-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="video-modal-frame">
+        {# Placeholder video — swap the ID after /embed/ for the real one #}
+        <template>
+            <iframe src="https://www.youtube.com/embed/M7lc1UVf-VE"
+                    title="How Spendly works"
+                    allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                    allowfullscreen></iframe>
+        </template>
+    </div>
+</dialog>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/landing.js') }}"></script>
 {% endblock %}

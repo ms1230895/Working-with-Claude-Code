@@ -68,6 +68,7 @@
 .hero-actions .btn-primary {
     font-size: 1.2rem;
     font-weight: 600;
+    line-height: 1.6;
     padding: 0.9rem 2.1rem;
     border-radius: var(--radius-md);
 }
@@ -176,6 +177,71 @@
 .hero-bar-fill.is-food { background: #e5a23f; }
 .hero-bar-fill.is-travel { background: #4a86d8; }
 .hero-bar-fill.is-bills { background: #7c6fd1; }
+
+/* ------------------------------------------------------------------ */
+/* "See how it works" video modal                                      */
+/* ------------------------------------------------------------------ */
+
+.video-modal {
+    width: min(900px, calc(100vw - 2rem));
+    max-width: none;
+    margin: auto;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-lg);
+    background: var(--paper-card);
+    color: var(--ink);
+    overflow: hidden;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.3);
+}
+
+.video-modal::backdrop { background: rgba(15, 15, 15, 0.6); }
+
+/* Stop the page behind the modal from scrolling while it is open. */
+html:has(.video-modal[open]) { overflow: hidden; }
+
+.video-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.9rem 1rem 0.9rem 1.5rem;
+}
+
+.video-modal-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+.video-modal-close {
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    background: var(--paper);
+    color: var(--ink-soft);
+    font-size: 1.4rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.video-modal-close:hover {
+    border-color: var(--ink);
+    color: var(--ink);
+}
+
+.video-modal-frame {
+    aspect-ratio: 16 / 9;
+    background: var(--ink);
+}
+
+.video-modal-frame iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
 
 /* ------------------------------------------------------------------ */
 /* Hero — responsive                                                   */
