@@ -92,3 +92,28 @@ def seed_db():
             )
     finally:
         conn.close()
+
+
+def get_user_by_email(email):
+    # Returns the user's row, or None when no account uses this email
+    conn = get_db()
+    try:
+        return conn.execute(
+            "SELECT * FROM users WHERE email = ?", (email,)
+        ).fetchone()
+    finally:
+        conn.close()
+
+
+def create_user(name, email, password):
+    conn = get_db()
+    try:
+        # Saved on success; a duplicate email raises sqlite3.IntegrityError
+        with conn:
+            cursor = conn.execute(
+                "INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)",
+                (name, email, generate_password_hash(password)),
+            )
+        return cursor.lastrowid
+    finally:
+        conn.close()
