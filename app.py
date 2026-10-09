@@ -1,6 +1,7 @@
 import os
 import secrets
 import sqlite3
+from datetime import datetime
 from functools import wraps
 
 from flask import (
@@ -66,6 +67,24 @@ def login_required(view):
         return view(*args, **kwargs)
 
     return wrapped
+
+
+# ------------------------------------------------------------------ #
+# Template filters                                                    #
+# ------------------------------------------------------------------ #
+
+@app.template_filter("format_money")
+def format_money(value):
+    # 3610.49 becomes ₹3,610.49
+    return f"₹{value:,.2f}"
+
+
+@app.template_filter("format_date")
+def format_date(value, fmt="%d %b %Y"):
+    # Takes the text SQLite stores: "2026-09-24" or "2026-09-24 18:05:00"
+    if not value:
+        return ""
+    return datetime.fromisoformat(value).strftime(fmt)
 
 
 # ------------------------------------------------------------------ #
@@ -148,7 +167,7 @@ def login():
     # Start from an empty session, so nothing from before sign-in is kept
     session.clear()
     session["user_id"] = user["id"]
-    return redirect(url_for("landing"))
+    return redirect(url_for("profile"))
 
 
 @app.route("/logout", methods=["POST"])
@@ -169,15 +188,56 @@ def privacy():
     return render_template("privacy.html")
 
 
-# ------------------------------------------------------------------ #
-# Placeholder routes — students will implement these                  #
-# ------------------------------------------------------------------ #
-
 @app.route("/profile")
 @login_required
 def profile():
-    return "Profile page — coming in Step 4"
+    # Sample values for the design step. Step 5 replaces all three with
+    # queries on the expenses table, in this same shape
+    stats = {
+        "total_spent": 3610.49,
+        "transaction_count": 8,
+        "top_category": "Bills",
+    }
 
+    # Newest first; same keys as the expenses table columns
+    expenses = [
+        {"date": "2026-09-24", "description": "Gift wrap and card",
+         "category": "Other", "amount": 150.00},
+        {"date": "2026-09-19", "description": "Lunch with friends",
+         "category": "Food", "amount": 180.00},
+        {"date": "2026-09-15", "description": "Headphones",
+         "category": "Shopping", "amount": 999.99},
+        {"date": "2026-09-12", "description": "Movie tickets",
+         "category": "Entertainment", "amount": 300.00},
+        {"date": "2026-09-08", "description": "Pharmacy",
+         "category": "Health", "amount": 450.00},
+        {"date": "2026-09-05", "description": "Metro card recharge",
+         "category": "Transport", "amount": 80.00},
+        {"date": "2026-09-03", "description": "Groceries",
+         "category": "Food", "amount": 250.50},
+        {"date": "2026-09-01", "description": "Electricity bill",
+         "category": "Bills", "amount": 1200.00},
+    ]
+
+    # Largest first; percent is the share of total_spent, rounded
+    categories = [
+        {"name": "Bills", "total": 1200.00, "percent": 33},
+        {"name": "Shopping", "total": 999.99, "percent": 28},
+        {"name": "Health", "total": 450.00, "percent": 12},
+        {"name": "Food", "total": 430.50, "percent": 12},
+        {"name": "Entertainment", "total": 300.00, "percent": 8},
+        {"name": "Other", "total": 150.00, "percent": 4},
+        {"name": "Transport", "total": 80.00, "percent": 2},
+    ]
+
+    return render_template(
+        "profile.html", stats=stats, expenses=expenses, categories=categories
+    )
+
+
+# ------------------------------------------------------------------ #
+# Placeholder routes — students will implement these                  #
+# ------------------------------------------------------------------ #
 
 @app.route("/expenses/add")
 @login_required

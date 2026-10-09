@@ -1,0 +1,356 @@
+/* ------------------------------------------------------------------ */
+/* Profile page — layout                                               */
+/* Loaded after style.css. Uses only the tokens that file sets on      */
+/* :root; no literal colour values here.                               */
+/* Spacing moves in 0.25rem (4px) steps. Font sizes come from one      */
+/* scale: 0.75, 0.875, 1, 1.25, 1.5 and 2rem.                          */
+/* ------------------------------------------------------------------ */
+
+.profile-section { padding: 3rem 2rem 4rem; }
+
+.profile-container {
+    max-width: var(--max-width);
+    margin: 0 auto;
+}
+
+/* ------------------------------------------------------------------ */
+/* Card — the one surface every block on the page sits on              */
+/* ------------------------------------------------------------------ */
+
+.profile-card {
+    background: var(--paper-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-card);
+    padding: 1.5rem;
+    /* A grid item is never narrower than its content unless told so */
+    min-width: 0;
+}
+
+.profile-card-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-body);
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--ink);
+    margin-bottom: 1rem;
+}
+
+.profile-card-title .profile-icon { color: var(--ink-muted); }
+
+/* ------------------------------------------------------------------ */
+/* Icons                                                               */
+/* Lucide swaps each <i data-lucide> for an <svg> and keeps its        */
+/* classes, so the size is fixed here before and after the swap.       */
+/* ------------------------------------------------------------------ */
+
+.profile-icon {
+    display: inline-block;
+    flex: none;
+    width: 1rem;
+    height: 1rem;
+}
+
+.profile-icon-md {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.profile-icon-lg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+/* A .btn-primary that holds an icon next to its label */
+.profile-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* Header                                                              */
+/* ------------------------------------------------------------------ */
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.profile-avatar {
+    flex: none;
+    width: 4rem;
+    height: 4rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent-light);
+    color: var(--accent);
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+/* Takes the space between the avatar and the button. min-width lets a
+   long name or email wrap instead of pushing the page wider. */
+.profile-identity {
+    flex: 1;
+    min-width: 0;
+}
+
+.profile-name {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    line-height: 1.2;
+    color: var(--ink);
+    overflow-wrap: anywhere;
+}
+
+.profile-email {
+    font-size: 0.875rem;
+    color: var(--ink-muted);
+    overflow-wrap: anywhere;
+}
+
+.profile-since {
+    font-size: 0.75rem;
+    color: var(--ink-muted);
+}
+
+.profile-add { flex: none; }
+
+/* ------------------------------------------------------------------ */
+/* Sample data note                                                    */
+/* ------------------------------------------------------------------ */
+
+.profile-note {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--accent-2-light);
+    color: var(--ink-soft);
+    border-left: 4px solid var(--accent-2);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    margin-bottom: 1.5rem;
+}
+
+.profile-note .profile-icon { color: var(--accent-2); }
+
+/* ------------------------------------------------------------------ */
+/* Summary cards                                                       */
+/* ------------------------------------------------------------------ */
+
+.profile-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.profile-stat {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.profile-stat-icon {
+    flex: none;
+    width: 3rem;
+    height: 3rem;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent-light);
+    color: var(--accent);
+}
+
+.profile-stat-text { min-width: 0; }
+
+.profile-stat-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.25rem;
+}
+
+.profile-stat-value {
+    font-family: var(--font-body);
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+}
+
+/* ------------------------------------------------------------------ */
+/* Expenses and categories, side by side                               */
+/* ------------------------------------------------------------------ */
+
+.profile-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+/* No category card (empty expense list): the one card takes the full width */
+.profile-grid > :only-child { grid-column: 1 / -1; }
+
+/* ------------------------------------------------------------------ */
+/* Expense table                                                       */
+/* ------------------------------------------------------------------ */
+
+/* On a narrow screen the table scrolls inside this box, not the page.
+   The negative margin cancels the cells' side padding, so the text lines
+   up with the card title while the hover band reaches a little wider. */
+.profile-table-wrap {
+    overflow-x: auto;
+    margin: 0 -0.75rem;
+}
+
+.profile-table {
+    width: 100%;
+    min-width: 30rem;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.profile-table th,
+.profile-table td {
+    padding: 0.75rem;
+    text-align: left;
+    color: var(--ink-soft);
+    border-bottom: 1px solid var(--border-soft);
+}
+
+.profile-table th {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border-bottom-color: var(--border);
+}
+
+.profile-table tbody tr { transition: background 0.2s; }
+
+.profile-table tbody tr:hover { background: var(--paper); }
+
+.profile-table tbody tr:last-child td { border-bottom: none; }
+
+.profile-table .profile-date {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.profile-table .profile-amount {
+    text-align: right;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.profile-table td.profile-amount {
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.profile-pill {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    background: var(--accent-light);
+    color: var(--accent);
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------ */
+/* Category breakdown                                                  */
+/* ------------------------------------------------------------------ */
+
+.profile-category + .profile-category { margin-top: 1rem; }
+
+.profile-category-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+.profile-category-name {
+    font-weight: 500;
+    color: var(--ink-soft);
+}
+
+.profile-category-total {
+    color: var(--ink-muted);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.profile-bar-track {
+    height: 0.5rem;
+    background: var(--border-soft);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+/* The width comes from the template: it is the category's percentage */
+.profile-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 999px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Empty state                                                         */
+/* ------------------------------------------------------------------ */
+
+.profile-empty {
+    text-align: center;
+    padding: 2rem 1rem;
+    font-size: 1rem;
+    color: var(--ink-muted);
+}
+
+.profile-empty p { margin-bottom: 1rem; }
+
+/* ------------------------------------------------------------------ */
+/* Profile — responsive                                                */
+/* ------------------------------------------------------------------ */
+
+@media (max-width: 900px) {
+    .profile-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+    .profile-section { padding: 2rem 1rem 3rem; }
+
+    .profile-stats {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .profile-card { padding: 1.25rem; }
+
+    /* Button drops to its own line under the name */
+    .profile-add { flex-basis: 100%; }
+}

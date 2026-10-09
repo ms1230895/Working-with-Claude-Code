@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Profile — Spendly{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<section class="profile-section">
+    <div class="profile-container">
+
+        <header class="profile-card profile-header">
+            <div class="profile-avatar" aria-hidden="true">{{ g.user['name'][0]|upper }}</div>
+            <div class="profile-identity">
+                <h1 class="profile-name">{{ g.user['name'] }}</h1>
+                <p class="profile-email">{{ g.user['email'] }}</p>
+                <p class="profile-since">Member since {{ g.user['created_at']|format_date('%B %Y') }}</p>
+            </div>
+            <a href="{{ url_for('add_expense') }}" class="btn-primary profile-btn profile-add">
+                <i data-lucide="plus" class="profile-icon profile-icon-md"></i>
+                Add expense
+            </a>
+        </header>
+
+        <p class="profile-note">
+            <i data-lucide="info" class="profile-icon"></i>
+            <span>
+                Sample data. The figures below are placeholders; your own
+                expenses appear here in a later step.
+            </span>
+        </p>
+
+        <div class="profile-stats">
+            <div class="profile-card profile-stat">
+                <div class="profile-stat-icon">
+                    <i data-lucide="wallet" class="profile-icon profile-icon-md"></i>
+                </div>
+                <div class="profile-stat-text">
+                    <p class="profile-stat-label">Total spent</p>
+                    <p class="profile-stat-value">{{ stats.total_spent|format_money }}</p>
+                </div>
+            </div>
+            <div class="profile-card profile-stat">
+                <div class="profile-stat-icon">
+                    <i data-lucide="credit-card" class="profile-icon profile-icon-md"></i>
+                </div>
+                <div class="profile-stat-text">
+                    <p class="profile-stat-label">Transactions</p>
+                    <p class="profile-stat-value">{{ stats.transaction_count }}</p>
+                </div>
+            </div>
+            <div class="profile-card profile-stat">
+                <div class="profile-stat-icon">
+                    <i data-lucide="tag" class="profile-icon profile-icon-md"></i>
+                </div>
+                <div class="profile-stat-text">
+                    <p class="profile-stat-label">Top category</p>
+                    <p class="profile-stat-value">{{ stats.top_category }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-grid">
+
+            <section class="profile-card">
+                <h2 class="profile-card-title">
+                    <i data-lucide="clock" class="profile-icon profile-icon-lg"></i>
+                    Recent expenses
+                </h2>
+
+                {% if expenses %}
+                <div class="profile-table-wrap">
+                    <table class="profile-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Date</th>
+                                <th scope="col">Description</th>
+                                <th scope="col">Category</th>
+                                <th scope="col" class="profile-amount">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for expense in expenses %}
+                            <tr>
+                                <td class="profile-date">{{ expense.date|format_date }}</td>
+                                <td>{{ expense.description }}</td>
+                                <td><span class="profile-pill">{{ expense.category }}</span></td>
+                                <td class="profile-amount">{{ expense.amount|format_money }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="profile-empty">
+                    <p>No expenses yet. Add your first one to see it here.</p>
+                    <a href="{{ url_for('add_expense') }}" class="btn-primary profile-btn">
+                        <i data-lucide="plus" class="profile-icon profile-icon-md"></i>
+                        Add expense
+                    </a>
+                </div>
+                {% endif %}
+            </section>
+
+            {% if expenses %}
+            <section class="profile-card">
+                <h2 class="profile-card-title">
+                    <i data-lucide="pie-chart" class="profile-icon profile-icon-lg"></i>
+                    By category
+                </h2>
+
+                {% for category in categories %}
+                <div class="profile-category">
+                    <div class="profile-category-row">
+                        <span class="profile-category-name">{{ category.name }}</span>
+                        <span class="profile-category-total">{{ category.total|format_money }} · {{ category.percent }}%</span>
+                    </div>
+                    <div class="profile-bar-track">
+                        <div class="profile-bar-fill" style="width: {{ category.percent }}%"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </section>
+            {% endif %}
+
+        </div>
+
+    </div>
+</section>
+
+{% endblock %}

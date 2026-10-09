@@ -55,6 +55,10 @@
         </div>
     </footer>
 
+    {# Lucide icons. The version is pinned; the integrity hash belongs to that exact file #}
+    <script src="https://unpkg.com/lucide@1.54.0/dist/umd/lucide.min.js"
+            integrity="sha384-q/80k7p5yAW6rdXVRCtTPWF4WkahaeBUF9R9H0P8zGqaYzqdEEdxlY5uZltyvsbI"
+            crossorigin="anonymous"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     {% block scripts %}{% endblock %}
 </body>
