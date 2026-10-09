@@ -1,15 +1,71 @@
+import os
+import secrets
 import sqlite3
+from functools import wraps
 
-from flask import Flask, redirect, render_template, request, url_for
+from flask import (
+    Flask,
+    flash,
+    g,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
 
-from database.db import create_user, get_db, get_user_by_email, init_db, seed_db
+from database.db import (
+    authenticate_user,
+    create_user,
+    get_db,
+    get_user_by_email,
+    get_user_by_id,
+    init_db,
+    seed_db,
+)
 
 app = Flask(__name__)
+
+# Signs the session cookie. Without SECRET_KEY in the environment a new key is
+# made on every start, so restarting the server signs everyone out
+app.secret_key = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
 # Create the tables and demo data before any route is used
 with app.app_context():
     init_db()
     seed_db()
+
+
+# ------------------------------------------------------------------ #
+# Signed-in user                                                      #
+# ------------------------------------------------------------------ #
+
+@app.before_request
+def load_user():
+    g.user = None
+    # CSS and JS requests do not need to know who is signed in
+    if request.endpoint == "static":
+        return
+
+    user_id = session.get("user_id")
+    if user_id is None:
+        return
+
+    g.user = get_user_by_id(user_id)
+    if g.user is None:
+        # The account is gone (for example the database file was deleted)
+        session.clear()
+
+
+def login_required(view):
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        if g.user is None:
+            return redirect(url_for("login"))
+        return view(*args, **kwargs)
+
+    return wrapped
 
 
 # ------------------------------------------------------------------ #
@@ -24,6 +80,9 @@ def landing():
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "GET":
+        # Someone already signed in has no use for this form
+        if g.user:
+            return redirect(url_for("landing"))
         return render_template("register.html")
 
     name = request.form.get("name", "").strip()
@@ -57,12 +116,47 @@ def register():
         return render_template("register.html", error=error, name=name, email=email)
 
     # Redirect, so refreshing the next page cannot submit the form again
+    flash("Account created. Please sign in.")
     return redirect(url_for("login"))
 
 
-@app.route("/login")
+@app.route("/login", methods=["GET", "POST"])
 def login():
-    return render_template("login.html")
+    if request.method == "GET":
+        if g.user:
+            return redirect(url_for("landing"))
+        return render_template("login.html")
+
+    email = request.form.get("email", "").strip()
+    password = request.form.get("password", "")
+
+    # The first rule that fails decides the message
+    error = None
+    user = None
+    if not email or not password:
+        error = "Please enter your email and password."
+    else:
+        # Same message for an unknown email and a wrong password, so the form
+        # does not reveal which emails have accounts
+        user = authenticate_user(email.lower(), password)
+        if user is None:
+            error = "Invalid email or password."
+
+    if error:
+        return render_template("login.html", error=error, email=email)
+
+    # Start from an empty session, so nothing from before sign-in is kept
+    session.clear()
+    session["user_id"] = user["id"]
+    return redirect(url_for("landing"))
+
+
+@app.route("/logout", methods=["POST"])
+def logout():
+    # Clear first: the flash message is stored in the session too
+    session.clear()
+    flash("You have been signed out.")
+    return redirect(url_for("landing"))
 
 
 @app.route("/terms")
@@ -79,27 +173,26 @@ def privacy():
 # Placeholder routes — students will implement these                  #
 # ------------------------------------------------------------------ #
 
-@app.route("/logout")
-def logout():
-    return "Logout — coming in Step 3"
-
-
 @app.route("/profile")
+@login_required
 def profile():
     return "Profile page — coming in Step 4"
 
 
 @app.route("/expenses/add")
+@login_required
 def add_expense():
     return "Add expense — coming in Step 7"
 
 
 @app.route("/expenses/<int:id>/edit")
+@login_required
 def edit_expense(id):
     return "Edit expense — coming in Step 8"
 
 
 @app.route("/expenses/<int:id>/delete")
+@login_required
 def delete_expense(id):
     return "Delete expense — coming in Step 9"
 

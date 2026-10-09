@@ -19,13 +19,29 @@
                 <span class="brand-name">Spendly</span>
             </a>
             <div class="nav-links">
+                {% if g.user %}
+                <a href="{{ url_for('profile') }}">{{ g.user['name'] }}</a>
+                <form method="POST" action="{{ url_for('logout') }}">
+                    <button type="submit" class="nav-logout">Sign out</button>
+                </form>
+                {% else %}
                 <a href="{{ url_for('login') }}">Sign in</a>
                 <a href="{{ url_for('register') }}" class="nav-cta">Get started</a>
+                {% endif %}
             </div>
         </div>
     </nav>
 
     <main class="main-content">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class="flash-list">
+            {% for message in messages %}
+            <div class="flash" role="status">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
         {% block content %}{% endblock %}
     </main>
 
