@@ -141,72 +141,94 @@ def authenticate_user(email, password):
     return user
 
 
-def get_recent_expenses(user_id, limit=10):
+def _expense_filter(user_id, date_from=None, date_to=None):
+    # Returns the WHERE text and its parameters for one user's expenses,
+    # limited to a date range when one is given. Both ends are included.
+    # Only the fixed strings below are joined; every value is a ? parameter
+    conditions = ["user_id = ?"]
+    params = [user_id]
+
+    # date is YYYY-MM-DD text, which sorts in date order
+    if date_from:
+        conditions.append("date >= ?")
+        params.append(date_from)
+    if date_to:
+        conditions.append("date <= ?")
+        params.append(date_to)
+
+    return " AND ".join(conditions), tuple(params)
+
+
+def get_recent_expenses(user_id, limit=10, date_from=None, date_to=None):
     # Returns the user's newest expenses first; id orders two on the same date
+    where, params = _expense_filter(user_id, date_from, date_to)
     conn = get_db()
     try:
         return conn.execute(
             "SELECT id, date, description, category, amount FROM expenses"
-            " WHERE user_id = ? ORDER BY date DESC, id DESC LIMIT ?",
-            (user_id, limit),
+            " WHERE " + where + " ORDER BY date DESC, id DESC LIMIT ?",
+            params + (limit,),
         ).fetchall()
     finally:
         conn.close()
 
 
-def get_expense_stats(user_id):
+def get_expense_stats(user_id, date_from=None, date_to=None):
     # Returns total_spent, transaction_count and top_category for one user.
-    # Covers all of the user's expenses, not only the ones the page lists
+    # Covers every expense in the date range, not only the ones the page lists
+    where, params = _expense_filter(user_id, date_from, date_to)
     conn = get_db()
     try:
         # SUM over no rows is NULL; COALESCE turns it into 0
         totals = conn.execute(
             "SELECT COUNT(*) AS transaction_count,"
             " COALESCE(SUM(amount), 0) AS total_spent"
-            " FROM expenses WHERE user_id = ?",
-            (user_id,),
+            " FROM expenses WHERE " + where,
+            params,
         ).fetchone()
 
         # Largest total first; on a tie the alphabetically first category wins
         top = conn.execute(
-            "SELECT category FROM expenses WHERE user_id = ?"
+            "SELECT category FROM expenses WHERE " + where +
             " GROUP BY category"
             " ORDER BY SUM(amount) DESC, category ASC LIMIT 1",
-            (user_id,),
+            params,
         ).fetchone()
 
         return {
             # float(): the COALESCE fallback is the integer 0, not 0.0
             "total_spent": float(totals["total_spent"]),
             "transaction_count": totals["transaction_count"],
-            # No row at all when the user has no expenses
+            # No row at all when there are no expenses in the range
             "top_category": top["category"] if top else None,
         }
     finally:
         conn.close()
 
 
-def get_category_totals(user_id):
-    # Returns one dict per category the user has spent in, largest total first
+def get_category_totals(user_id, date_from=None, date_to=None):
+    # Returns one dict per category the user has spent in, largest total first.
+    # With a date range, only the expenses in that range are counted
+    where, params = _expense_filter(user_id, date_from, date_to)
     conn = get_db()
     try:
         rows = conn.execute(
             "SELECT category, SUM(amount) AS total FROM expenses"
-            " WHERE user_id = ? GROUP BY category"
+            " WHERE " + where + " GROUP BY category"
             " ORDER BY total DESC, category ASC",
-            (user_id,),
+            params,
         ).fetchall()
     finally:
         conn.close()
 
-    # The user's total, added up from the grouped totals already fetched
+    # The total in the range, added up from the grouped totals already fetched
     grand_total = sum(row["total"] for row in rows)
 
     return [
         {
             "name": row["category"],
             "total": row["total"],
-            # Share of the user's total; 0 when that total is 0
+            # Share of the total in the range; 0 when that total is 0
             "percent": round(row["total"] / grand_total * 100) if grand_total else 0,
         }
         for row in rows

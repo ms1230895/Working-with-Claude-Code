@@ -24,6 +24,57 @@
             </a>
         </header>
 
+        <section class="profile-card profile-filter">
+            <h2 class="profile-card-title">
+                <i data-lucide="calendar" class="profile-icon profile-icon-lg"></i>
+                Filter by date
+            </h2>
+
+            <nav class="profile-filter-presets" aria-label="Date ranges">
+                {% for preset in presets %}
+                <a href="{{ url_for('profile', date_from=preset.date_from, date_to=preset.date_to) }}"
+                   class="profile-filter-preset{% if preset.active %} profile-filter-preset-active{% endif %}"
+                   {% if preset.active %}aria-current="true"{% endif %}>{{ preset.label }}</a>
+                {% endfor %}
+            </nav>
+
+            {% if filter_error %}
+            <p class="auth-error" role="alert">{{ filter_error }}</p>
+            {% endif %}
+
+            <form method="get" action="{{ url_for('profile') }}" class="profile-filter-form">
+                <div class="profile-filter-field">
+                    <label for="date_from">From</label>
+                    <input type="date" id="date_from" name="date_from"
+                           class="form-input profile-filter-input"
+                           value="{{ date_from or '' }}">
+                </div>
+                <div class="profile-filter-field">
+                    <label for="date_to">To</label>
+                    <input type="date" id="date_to" name="date_to"
+                           class="form-input profile-filter-input"
+                           value="{{ date_to or '' }}">
+                </div>
+                <button type="submit" class="btn-primary profile-filter-apply">Apply</button>
+                {% if filter_active %}
+                <a href="{{ url_for('profile') }}" class="profile-filter-clear">Clear</a>
+                {% endif %}
+            </form>
+
+            {# Only for a range that passed the checks: format_date needs real dates #}
+            {% if filter_active %}
+            <p class="profile-filter-summary">
+                {% if date_from and date_to %}
+                {{ date_from|format_date }} – {{ date_to|format_date }}
+                {% elif date_from %}
+                From {{ date_from|format_date }}
+                {% else %}
+                Up to {{ date_to|format_date }}
+                {% endif %}
+            </p>
+            {% endif %}
+        </section>
+
         <div class="profile-stats">
             <div class="profile-card profile-stat">
                 <div class="profile-stat-icon">
@@ -84,6 +135,11 @@
                             {% endfor %}
                         </tbody>
                     </table>
+                </div>
+                {% elif filter_active %}
+                <div class="profile-empty">
+                    <p>No expenses in this period.</p>
+                    <a href="{{ url_for('profile') }}" class="profile-filter-clear">Clear filter</a>
                 </div>
                 {% else %}
                 <div class="profile-empty">

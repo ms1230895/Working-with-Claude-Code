@@ -1,7 +1,7 @@
 import os
 import secrets
 import sqlite3
-from datetime import datetime
+from datetime import date, datetime
 from functools import wraps
 
 from flask import (
@@ -88,6 +88,36 @@ def format_date(value, fmt="%d %b %Y"):
     if not value:
         return ""
     return datetime.fromisoformat(value).strftime(fmt)
+
+
+# ------------------------------------------------------------------ #
+# Date filter                                                         #
+# ------------------------------------------------------------------ #
+
+def parse_filter_date(text):
+    # Returns a date, or None when the text is not a real YYYY-MM-DD date.
+    # strptime, not date.fromisoformat, which also takes week dates (2026-W36-2)
+    try:
+        return datetime.strptime(text.strip(), "%Y-%m-%d").date()
+    except ValueError:
+        return None
+
+
+def get_date_presets(today):
+    # The ranges offered as links on the profile page; each one ends today
+
+    def first_of_month(months_back):
+        # Months counted as one number, so January steps back into last year
+        index = today.year * 12 + today.month - 1 - months_back
+        return date(index // 12, index % 12 + 1, 1).isoformat()
+
+    end = today.isoformat()
+    return [
+        {"label": "This month", "date_from": first_of_month(0), "date_to": end},
+        {"label": "Last 3 months", "date_from": first_of_month(2), "date_to": end},
+        {"label": "Last 6 months", "date_from": first_of_month(5), "date_to": end},
+        {"label": "All time", "date_from": None, "date_to": None},
+    ]
 
 
 # ------------------------------------------------------------------ #
@@ -194,17 +224,54 @@ def privacy():
 @app.route("/profile")
 @login_required
 def profile():
-    # Totals for the signed-in user only, over all of their expenses
-    stats = get_expense_stats(g.user["id"])
+    # An empty value (the form was sent with the input left blank) is not given
+    typed_from = request.args.get("date_from", "").strip()
+    typed_to = request.args.get("date_to", "").strip()
+    start = parse_filter_date(typed_from) if typed_from else None
+    end = parse_filter_date(typed_to) if typed_to else None
+
+    # The first rule that fails decides the message
+    filter_error = None
+    if (typed_from and start is None) or (typed_to and end is None):
+        filter_error = "Please enter valid dates."
+    elif start and end and start > end:
+        filter_error = "The start date cannot be after the end date."
+
+    # The range the queries use. Always the parsed date written out again,
+    # never the text from the URL. A bad range filters nothing
+    date_from = date_to = None
+    if filter_error is None:
+        date_from = start.isoformat() if start else None
+        date_to = end.isoformat() if end else None
+    filter_active = date_from is not None or date_to is not None
+
+    # Totals for the signed-in user only, over the expenses in the range
+    stats = get_expense_stats(g.user["id"], date_from, date_to)
 
     # Newest first, ten at most; rows have the expenses table column names
-    expenses = get_recent_expenses(g.user["id"])
+    expenses = get_recent_expenses(g.user["id"], date_from=date_from, date_to=date_to)
 
-    # Largest total first, with each category's share of the user's total
-    categories = get_category_totals(g.user["id"])
+    # Largest total first, with each category's share of the total in the range
+    categories = get_category_totals(g.user["id"], date_from, date_to)
+
+    # "All time" has no dates, so it is the active one when nothing is filtered
+    presets = get_date_presets(date.today())
+    for preset in presets:
+        preset["active"] = (
+            preset["date_from"] == date_from and preset["date_to"] == date_to
+        )
 
     return render_template(
-        "profile.html", stats=stats, expenses=expenses, categories=categories
+        "profile.html",
+        stats=stats,
+        expenses=expenses,
+        categories=categories,
+        # What the inputs show: after an error, what the user typed
+        date_from=typed_from if filter_error else date_from,
+        date_to=typed_to if filter_error else date_to,
+        filter_active=filter_active,
+        filter_error=filter_error,
+        presets=presets,
     )
 
 

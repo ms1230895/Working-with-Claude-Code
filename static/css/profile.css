@@ -128,6 +128,93 @@
 .profile-add { flex: none; }
 
 /* ------------------------------------------------------------------ */
+/* Date filter                                                         */
+/* ------------------------------------------------------------------ */
+
+.profile-filter { margin-bottom: 1.5rem; }
+
+.profile-filter-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.profile-filter-preset {
+    padding: 0.25rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--ink-soft);
+    white-space: nowrap;
+    transition: border-color 0.2s, color 0.2s;
+}
+
+.profile-filter-preset:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+/* The range the page is showing now */
+.profile-filter-preset-active {
+    background: var(--accent-light);
+    border-color: var(--accent-light);
+    color: var(--accent);
+}
+
+/* Inputs, button and link share one baseline: the bottom of the inputs */
+.profile-filter-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 1rem;
+}
+
+.profile-filter-field label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--ink-muted);
+    margin-bottom: 0.25rem;
+}
+
+/* .form-input comes from the sign-in forms; these bring it onto this
+   page's spacing and type scale. */
+.profile-filter-input {
+    width: 11rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+.profile-filter-clear {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--accent);
+}
+
+.profile-filter-clear:hover { text-decoration: underline; }
+
+/* Sits level with the button's label, not with its bottom edge */
+.profile-filter-form .profile-filter-clear { padding-bottom: 0.5rem; }
+
+.profile-filter-summary {
+    font-size: 0.875rem;
+    color: var(--ink-muted);
+    font-variant-numeric: tabular-nums;
+    margin-top: 1rem;
+}
+
+/* .form-input removes the outline, so keyboard focus is drawn here */
+.profile-filter-preset:focus-visible,
+.profile-filter-input:focus-visible,
+.profile-filter-apply:focus-visible,
+.profile-filter-clear:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+/* ------------------------------------------------------------------ */
 /* Summary cards                                                       */
 /* ------------------------------------------------------------------ */
 
@@ -334,4 +421,17 @@
 
     /* Button drops to its own line under the name */
     .profile-add { flex-basis: 100%; }
+
+    /* Inputs, button and link in one column, each the full width */
+    .profile-filter-form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .profile-filter-input { width: 100%; }
+
+    .profile-filter-form .profile-filter-clear {
+        padding-bottom: 0;
+        text-align: center;
+    }
 }
