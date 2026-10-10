@@ -18,7 +18,10 @@ from flask import (
 from database.db import (
     authenticate_user,
     create_user,
+    get_category_totals,
     get_db,
+    get_expense_stats,
+    get_recent_expenses,
     get_user_by_email,
     get_user_by_id,
     init_db,
@@ -191,44 +194,14 @@ def privacy():
 @app.route("/profile")
 @login_required
 def profile():
-    # Sample values for the design step. Step 5 replaces all three with
-    # queries on the expenses table, in this same shape
-    stats = {
-        "total_spent": 3610.49,
-        "transaction_count": 8,
-        "top_category": "Bills",
-    }
+    # Totals for the signed-in user only, over all of their expenses
+    stats = get_expense_stats(g.user["id"])
 
-    # Newest first; same keys as the expenses table columns
-    expenses = [
-        {"date": "2026-09-24", "description": "Gift wrap and card",
-         "category": "Other", "amount": 150.00},
-        {"date": "2026-09-19", "description": "Lunch with friends",
-         "category": "Food", "amount": 180.00},
-        {"date": "2026-09-15", "description": "Headphones",
-         "category": "Shopping", "amount": 999.99},
-        {"date": "2026-09-12", "description": "Movie tickets",
-         "category": "Entertainment", "amount": 300.00},
-        {"date": "2026-09-08", "description": "Pharmacy",
-         "category": "Health", "amount": 450.00},
-        {"date": "2026-09-05", "description": "Metro card recharge",
-         "category": "Transport", "amount": 80.00},
-        {"date": "2026-09-03", "description": "Groceries",
-         "category": "Food", "amount": 250.50},
-        {"date": "2026-09-01", "description": "Electricity bill",
-         "category": "Bills", "amount": 1200.00},
-    ]
+    # Newest first, ten at most; rows have the expenses table column names
+    expenses = get_recent_expenses(g.user["id"])
 
-    # Largest first; percent is the share of total_spent, rounded
-    categories = [
-        {"name": "Bills", "total": 1200.00, "percent": 33},
-        {"name": "Shopping", "total": 999.99, "percent": 28},
-        {"name": "Health", "total": 450.00, "percent": 12},
-        {"name": "Food", "total": 430.50, "percent": 12},
-        {"name": "Entertainment", "total": 300.00, "percent": 8},
-        {"name": "Other", "total": 150.00, "percent": 4},
-        {"name": "Transport", "total": 80.00, "percent": 2},
-    ]
+    # Largest total first, with each category's share of the user's total
+    categories = get_category_totals(g.user["id"])
 
     return render_template(
         "profile.html", stats=stats, expenses=expenses, categories=categories

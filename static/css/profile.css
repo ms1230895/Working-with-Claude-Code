@@ -128,25 +128,6 @@
 .profile-add { flex: none; }
 
 /* ------------------------------------------------------------------ */
-/* Sample data note                                                    */
-/* ------------------------------------------------------------------ */
-
-.profile-note {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: var(--accent-2-light);
-    color: var(--ink-soft);
-    border-left: 4px solid var(--accent-2);
-    border-radius: var(--radius-sm);
-    padding: 0.75rem 1rem;
-    font-size: 0.875rem;
-    margin-bottom: 1.5rem;
-}
-
-.profile-note .profile-icon { color: var(--accent-2); }
-
-/* ------------------------------------------------------------------ */
 /* Summary cards                                                       */
 /* ------------------------------------------------------------------ */
 
