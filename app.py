@@ -47,6 +47,7 @@ with app.app_context():
 # Signed-in user                                                      #
 # ------------------------------------------------------------------ #
 
+
 @app.before_request
 def load_user():
     g.user = None
@@ -78,6 +79,7 @@ def login_required(view):
 # Template filters                                                    #
 # ------------------------------------------------------------------ #
 
+
 @app.template_filter("format_money")
 def format_money(value):
     # 3610.49 becomes ₹3,610.49
@@ -95,6 +97,7 @@ def format_date(value, fmt="%d %b %Y"):
 # ------------------------------------------------------------------ #
 # Date filter                                                         #
 # ------------------------------------------------------------------ #
+
 
 def parse_filter_date(text):
     # Returns a date, or None when the text is not a real YYYY-MM-DD date.
@@ -185,6 +188,7 @@ def render_expense_form(today, **values):
 # ------------------------------------------------------------------ #
 # Routes                                                              #
 # ------------------------------------------------------------------ #
+
 
 @app.route("/")
 def landing():
@@ -390,6 +394,7 @@ def add_expense():
 # ------------------------------------------------------------------ #
 # Placeholder routes — students will implement these                  #
 # ------------------------------------------------------------------ #
+
 
 @app.route("/expenses/<int:id>/edit")
 @login_required

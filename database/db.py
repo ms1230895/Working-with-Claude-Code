@@ -31,8 +31,7 @@ def get_db():
 def init_db():
     conn = get_db()
     try:
-        conn.executescript(
-            """
+        conn.executescript("""
             CREATE TABLE IF NOT EXISTS users (
                 id            INTEGER PRIMARY KEY AUTOINCREMENT,
                 name          TEXT NOT NULL,
@@ -51,8 +50,7 @@ def init_db():
                 created_at  TEXT DEFAULT (datetime('now')),
                 FOREIGN KEY (user_id) REFERENCES users (id)
             );
-            """
-        )
+            """)
         conn.commit()
     finally:
         conn.close()
@@ -110,9 +108,7 @@ def get_user_by_email(email):
     # Returns the user's row, or None when no account uses this email
     conn = get_db()
     try:
-        return conn.execute(
-            "SELECT * FROM users WHERE email = ?", (email,)
-        ).fetchone()
+        return conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
     finally:
         conn.close()
 
@@ -135,9 +131,7 @@ def get_user_by_id(user_id):
     # Returns the user's row, or None when no account has this id
     conn = get_db()
     try:
-        return conn.execute(
-            "SELECT * FROM users WHERE id = ?", (user_id,)
-        ).fetchone()
+        return conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
     finally:
         conn.close()
 
@@ -217,8 +211,7 @@ def get_expense_stats(user_id, date_from=None, date_to=None):
 
         # Largest total first; on a tie the alphabetically first category wins
         top = conn.execute(
-            "SELECT category FROM expenses WHERE " + where +
-            " GROUP BY category"
+            "SELECT category FROM expenses WHERE " + where + " GROUP BY category"
             " ORDER BY SUM(amount) DESC, category ASC LIMIT 1",
             params,
         ).fetchone()

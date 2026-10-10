@@ -38,6 +38,7 @@ fresh file under tmp_path. The developer's expense_tracker.db is never opened.
 Where "today" matters the tests read datetime.date.today() themselves, and a
 test skips if the date changes while it runs.
 """
+
 import atexit
 import inspect
 import re
@@ -73,7 +74,13 @@ import app as app_module  # noqa: E402
 PASSWORD = "password123"
 EM_DASH = "—"
 SPEC_CATEGORIES = (
-    "Food", "Transport", "Bills", "Health", "Entertainment", "Shopping", "Other",
+    "Food",
+    "Transport",
+    "Bills",
+    "Health",
+    "Entertainment",
+    "Shopping",
+    "Other",
 )
 
 # The exact messages from the spec's "Errors" list
@@ -95,8 +102,19 @@ LONG_DESCRIPTION = "x" * 201
 # --------------------------------------------------------------------------- #
 
 _VOID_TAGS = {
-    "area", "base", "br", "col", "embed", "hr", "img", "input", "link",
-    "meta", "source", "track", "wbr",
+    "area",
+    "base",
+    "br",
+    "col",
+    "embed",
+    "hr",
+    "img",
+    "input",
+    "link",
+    "meta",
+    "source",
+    "track",
+    "wbr",
 }
 
 
@@ -195,9 +213,12 @@ def ancestor(node, tag=None, cls=None):
 # Page readers                                                                #
 # --------------------------------------------------------------------------- #
 
+
 def control(page, name):
     found = page.find_all(attrs={"name": name})
-    assert len(found) == 1, f"Expected exactly one control named {name!r}, got {len(found)}"
+    assert (
+        len(found) == 1
+    ), f"Expected exactly one control named {name!r}, got {len(found)}"
     return found[0]
 
 
@@ -220,8 +241,11 @@ def field_value(page, name):
 
 
 def selected_categories(page):
-    return [value for value, _text, selected in options(control(page, "category"))
-            if selected]
+    return [
+        value
+        for value, _text, selected in options(control(page, "category"))
+        if selected
+    ]
 
 
 def error_alerts(page):
@@ -284,6 +308,7 @@ def assert_no_active_content(page):
 # --------------------------------------------------------------------------- #
 # Fixtures and helpers                                                        #
 # --------------------------------------------------------------------------- #
+
 
 @pytest.fixture
 def empty_db(tmp_path, monkeypatch):
@@ -394,10 +419,15 @@ def table_exists(name):
 def snapshot_db():
     conn = db_module.get_db()
     try:
-        users = [tuple(r) for r in conn.execute(
-            "SELECT id, name, email, password_hash FROM users ORDER BY id")]
-        expenses = [tuple(r) for r in conn.execute(
-            "SELECT * FROM expenses ORDER BY id")]
+        users = [
+            tuple(r)
+            for r in conn.execute(
+                "SELECT id, name, email, password_hash FROM users ORDER BY id"
+            )
+        ]
+        expenses = [
+            tuple(r) for r in conn.execute("SELECT * FROM expenses ORDER BY id")
+        ]
     finally:
         conn.close()
     return users, expenses
@@ -433,19 +463,19 @@ def get_profile(test_client, **params):
 def assert_form_echoes(page, data):
     """After an error the form shows what the user typed."""
     for name in ("amount", "date", "description"):
-        assert field_value(page, name).strip() == data.get(name, "").strip(), (
-            f"The {name} field does not show the typed value"
-        )
+        assert (
+            field_value(page, name).strip() == data.get(name, "").strip()
+        ), f"The {name} field does not show the typed value"
     typed_category = data.get("category", "").strip()
     selected = selected_categories(page)
     if typed_category in SPEC_CATEGORIES:
-        assert selected == [typed_category], (
-            f"Expected {typed_category!r} to be selected, got {selected}"
-        )
+        assert selected == [
+            typed_category
+        ], f"Expected {typed_category!r} to be selected, got {selected}"
     else:
-        assert not [v for v in selected if v in SPEC_CATEGORIES], (
-            f"A category was selected although {typed_category!r} was typed"
-        )
+        assert not [
+            v for v in selected if v in SPEC_CATEGORIES
+        ], f"A category was selected although {typed_category!r} was typed"
 
 
 def assert_rejected(test_client, data, message, today):
@@ -453,17 +483,17 @@ def assert_rejected(test_client, data, message, today):
     before = db_rows()
     response = post_add(test_client, data)
     ensure_same_day(today)
-    assert response.status_code == 200, (
-        f"Bad input must answer 200, got {response.status_code}"
-    )
+    assert (
+        response.status_code == 200
+    ), f"Bad input must answer 200, got {response.status_code}"
     assert "Location" not in response.headers, "Bad input must not redirect"
     page = parse_page(response)
     alerts = error_alerts(page)
     assert len(alerts) == 1, f"Expected one error message, got {len(alerts)}"
     assert alerts[0].attrs.get("role") == "alert", "The error needs role='alert'"
-    assert alerts[0].text() == message, (
-        f"Expected {message!r}, got {alerts[0].text()!r}"
-    )
+    assert (
+        alerts[0].text() == message
+    ), f"Expected {message!r}, got {alerts[0].text()!r}"
     assert db_rows() == before, "A rejected POST must not change the expenses table"
     assert FLASH_TEXT not in flash_texts(page)
     assert_form_echoes(page, data)
@@ -478,6 +508,7 @@ def _short(value):
 # CATEGORIES                                                                  #
 # --------------------------------------------------------------------------- #
 
+
 class TestCategoriesConstant:
     def test_categories_is_a_tuple_of_the_seven_names_in_spec_order(self):
         assert isinstance(db_module.CATEGORIES, tuple), "CATEGORIES must be a tuple"
@@ -491,13 +522,12 @@ class TestCategoriesConstant:
 # create_expense()                                                            #
 # --------------------------------------------------------------------------- #
 
+
 class TestCreateExpenseHelper:
     def test_create_expense_signature_matches_the_spec(self):
         params = inspect.signature(db_module.create_expense).parameters
         assert list(params) == ["user_id", "amount", "category", "date", "description"]
-        assert params["description"].default is None, (
-            "description must default to None"
-        )
+        assert params["description"].default is None, "description must default to None"
 
     def test_create_expense_returns_the_new_row_id(self, empty_db, alice):
         first = db_module.create_expense(alice["id"], 12.5, "Food", "2026-01-02", "Tea")
@@ -520,8 +550,11 @@ class TestCreateExpenseHelper:
 
     def test_create_expense_accepts_keyword_arguments(self, empty_db, alice):
         new_id = db_module.create_expense(
-            user_id=alice["id"], amount=3.0, category="Other",
-            date="2026-02-01", description="Misc",
+            user_id=alice["id"],
+            amount=3.0,
+            category="Other",
+            date="2026-02-01",
+            description="Misc",
         )
         assert db_rows()[0]["id"] == new_id
 
@@ -562,6 +595,7 @@ class TestCreateExpenseHelper:
 # Auth guard                                                                  #
 # --------------------------------------------------------------------------- #
 
+
 class TestAuthGuard:
     def test_get_signed_out_redirects_to_login(self, client):
         response = client.get(url("add_expense"))
@@ -589,19 +623,28 @@ class TestAuthGuard:
         "data",
         [
             pytest.param({}, id="empty-body"),
-            pytest.param({"amount": "abc", "category": "Travel", "date": "x"},
-                         id="invalid-values"),
-            pytest.param({"amount": "5", "category": "Food", "date": "2026-01-01",
-                          "user_id": "1"}, id="forged-user-id"),
+            pytest.param(
+                {"amount": "abc", "category": "Travel", "date": "x"},
+                id="invalid-values",
+            ),
+            pytest.param(
+                {
+                    "amount": "5",
+                    "category": "Food",
+                    "date": "2026-01-01",
+                    "user_id": "1",
+                },
+                id="forged-user-id",
+            ),
         ],
     )
     def test_post_other_data_signed_out_still_redirects_to_login(
         self, client, alice, data
     ):
         response = post_add(client, data)
-        assert response.status_code == 302, (
-            "The sign-in check must come before validation"
-        )
+        assert (
+            response.status_code == 302
+        ), "The sign-in check must come before validation"
         assert urlparse(response.headers["Location"]).path == url("login")
         assert db_rows() == []
 
@@ -612,6 +655,7 @@ class TestAuthGuard:
 # --------------------------------------------------------------------------- #
 # GET /expenses/add                                                           #
 # --------------------------------------------------------------------------- #
+
 
 class TestAddExpenseForm:
     def test_get_returns_html_page(self, auth_client):
@@ -625,8 +669,11 @@ class TestAddExpenseForm:
         assert titles[0].text() == "Add expense — Spendly"
 
     def test_page_loads_expense_css_in_the_head(self, form_page):
-        hrefs = [link.attrs.get("href") for link in form_page.find_all("link")
-                 if link.attrs.get("rel") == "stylesheet"]
+        hrefs = [
+            link.attrs.get("href")
+            for link in form_page.find_all("link")
+            if link.attrs.get("rel") == "stylesheet"
+        ]
         assert url("static", filename="css/expense.css") in hrefs, hrefs
 
     def test_page_has_exactly_one_h1_add_expense(self, form_page):
@@ -646,9 +693,9 @@ class TestAddExpenseForm:
         assert card is not None, "The form must sit in .auth-card"
         container = ancestor(card, cls="auth-container")
         assert container is not None, ".auth-card must sit in .auth-container"
-        assert ancestor(container, cls="auth-section") is not None, (
-            ".auth-container must sit in .auth-section"
-        )
+        assert (
+            ancestor(container, cls="auth-section") is not None
+        ), ".auth-container must sit in .auth-section"
         headers = container.find_all(cls="auth-header")
         assert len(headers) == 1
         assert headers[0].find_all("h1"), "The <h1> belongs in .auth-header"
@@ -685,8 +732,11 @@ class TestAddExpenseForm:
         assert ctl.tag == tag
         control_id = ctl.attrs.get("id")
         assert control_id, f"The {name} control needs an id for its label"
-        labels = [lbl for lbl in form_page.find_all("label")
-                  if lbl.attrs.get("for") == control_id]
+        labels = [
+            lbl
+            for lbl in form_page.find_all("label")
+            if lbl.attrs.get("for") == control_id
+        ]
         assert len(labels) == 1, f"Expected one <label for={control_id}>"
         assert labels[0].text() == label_text
 
@@ -776,10 +826,15 @@ class TestAddExpenseForm:
         assert "Terms and Conditions" in links, "Expected the footer from base.html"
 
     def test_query_string_does_not_prefill_the_form(self, auth_client, today):
-        response = auth_client.get(url("add_expense"), query_string={
-            "amount": "99", "category": "Bills", "date": "2020-01-01",
-            "description": "from the URL",
-        })
+        response = auth_client.get(
+            url("add_expense"),
+            query_string={
+                "amount": "99",
+                "category": "Bills",
+                "date": "2020-01-01",
+                "description": "from the URL",
+            },
+        )
         page = parse_page(response)
         ensure_same_day(today)
         assert response.status_code == 200
@@ -790,8 +845,11 @@ class TestAddExpenseForm:
 
     def test_profile_add_expense_link_opens_the_form(self, auth_client):
         profile = parse_page(get_profile(auth_client))
-        links = [a for a in profile.find_all("a")
-                 if a.attrs.get("href") == url("add_expense")]
+        links = [
+            a
+            for a in profile.find_all("a")
+            if a.attrs.get("href") == url("add_expense")
+        ]
         assert links, "The profile page should link to /expenses/add"
         response = auth_client.get(links[0].attrs["href"])
         assert response.status_code == 200
@@ -801,6 +859,7 @@ class TestAddExpenseForm:
 # --------------------------------------------------------------------------- #
 # Happy path                                                                  #
 # --------------------------------------------------------------------------- #
+
 
 class TestHappyPath:
     def test_valid_post_redirects_to_profile_with_no_date_range(
@@ -851,9 +910,7 @@ class TestHappyPath:
         )
         assert summary(page) == ("₹250.50", "1", "Food")
 
-    def test_profile_table_shows_one_row_for_the_new_expense(
-        self, auth_client, today
-    ):
+    def test_profile_table_shows_one_row_for_the_new_expense(self, auth_client, today):
         page = parse_page(
             post_add(auth_client, valid_form(today), follow_redirects=True)
         )
@@ -863,11 +920,13 @@ class TestHappyPath:
         self, auth_client, today
     ):
         post_add(auth_client, valid_form(today))
-        page = parse_page(post_add(
-            auth_client,
-            valid_form(today, amount="1200", category="Bills", description=""),
-            follow_redirects=True,
-        ))
+        page = parse_page(
+            post_add(
+                auth_client,
+                valid_form(today, amount="1200", category="Bills", description=""),
+                follow_redirects=True,
+            )
+        )
         assert summary(page) == ("₹1,450.50", "2", "Bills")
         bills_rows = [r for r in table_rows(page) if r[2] == "Bills"]
         assert bills_rows == [[shown_date(today), EM_DASH, "Bills", "₹1,200.00"]]
@@ -876,8 +935,10 @@ class TestHappyPath:
         self, auth_client, today
     ):
         post_add(auth_client, valid_form(today))
-        post_add(auth_client, valid_form(today, amount="1200", category="Bills",
-                                         description=""))
+        post_add(
+            auth_client,
+            valid_form(today, amount="1200", category="Bills", description=""),
+        )
         last = db_rows()[-1]
         assert last["category"] == "Bills"
         assert last["description"] is None, "An empty description must be NULL"
@@ -897,9 +958,11 @@ class TestHappyPath:
     def test_every_category_is_accepted_and_stored_as_sent(
         self, auth_client, today, category
     ):
-        page = parse_page(post_add(
-            auth_client, valid_form(today, category=category), follow_redirects=True
-        ))
+        page = parse_page(
+            post_add(
+                auth_client, valid_form(today, category=category), follow_redirects=True
+            )
+        )
         assert [row["category"] for row in db_rows()] == [category]
         assert table_rows(page)[0][2] == category
         assert summary(page)[2] == category
@@ -914,17 +977,18 @@ class TestHappyPath:
 # Values stored in the database                                               #
 # --------------------------------------------------------------------------- #
 
+
 class TestStoredValues:
-    @pytest.mark.parametrize("description", ["", " ", "     ", "\t", " \t "], ids=_short)
-    def test_blank_description_is_saved_as_null(
-        self, auth_client, today, description
-    ):
+    @pytest.mark.parametrize(
+        "description", ["", " ", "     ", "\t", " \t "], ids=_short
+    )
+    def test_blank_description_is_saved_as_null(self, auth_client, today, description):
         response = post_add(auth_client, valid_form(today, description=description))
         assert response.status_code == 302
         (row,) = db_rows()
-        assert row["description"] is None, (
-            f"{description!r} must be saved as NULL, not {row['description']!r}"
-        )
+        assert (
+            row["description"] is None
+        ), f"{description!r} must be saved as NULL, not {row['description']!r}"
         assert description_type(row["id"]) == "null"
 
     def test_missing_description_field_is_saved_as_null(self, auth_client, today):
@@ -934,14 +998,14 @@ class TestStoredValues:
         assert row["description"] is None
 
     def test_blank_description_shows_a_dash_on_profile(self, auth_client, today):
-        page = parse_page(post_add(
-            auth_client, valid_form(today, description="   "), follow_redirects=True
-        ))
+        page = parse_page(
+            post_add(
+                auth_client, valid_form(today, description="   "), follow_redirects=True
+            )
+        )
         assert table_rows(page)[0][1] == EM_DASH
 
-    def test_description_is_stored_without_surrounding_spaces(
-        self, auth_client, today
-    ):
+    def test_description_is_stored_without_surrounding_spaces(self, auth_client, today):
         post_add(auth_client, valid_form(today, description="   Lunch   "))
         assert db_rows()[0]["description"].strip() == "Lunch"
 
@@ -949,9 +1013,11 @@ class TestStoredValues:
         self, auth_client, today
     ):
         text = "Café ₹ 日本語 🍜"
-        page = parse_page(post_add(
-            auth_client, valid_form(today, description=text), follow_redirects=True
-        ))
+        page = parse_page(
+            post_add(
+                auth_client, valid_form(today, description=text), follow_redirects=True
+            )
+        )
         assert db_rows()[0]["description"] == text
         assert table_rows(page)[0][1] == text
 
@@ -1007,28 +1073,77 @@ class TestStoredValues:
 # --------------------------------------------------------------------------- #
 
 BAD_AMOUNTS = [
-    "abc", "-5", "-0.50", "-0", "+5", "1e5", "1E5", "nan", "NaN", "inf", "-inf",
-    "Infinity", "1,200", "10.999", "0.001", "5.", ".5", ".", "₹250", "$250",
-    "250 rupees", "2 5", "1.2.3", "0x10", "1_000", "--5",
-    "٣٠", "５０",
+    "abc",
+    "-5",
+    "-0.50",
+    "-0",
+    "+5",
+    "1e5",
+    "1E5",
+    "nan",
+    "NaN",
+    "inf",
+    "-inf",
+    "Infinity",
+    "1,200",
+    "10.999",
+    "0.001",
+    "5.",
+    ".5",
+    ".",
+    "₹250",
+    "$250",
+    "250 rupees",
+    "2 5",
+    "1.2.3",
+    "0x10",
+    "1_000",
+    "--5",
+    "٣٠",
+    "５０",
 ]
 
 ZERO_AMOUNTS = ["0", "0.0", "0.00", "00", "000.00"]
 
 TOO_BIG_AMOUNTS = [
-    "10000000", "10000000.00", "10000000.01", "10000001", "99999999.99",
-    "1" + "0" * 30, "9" * 400,
+    "10000000",
+    "10000000.00",
+    "10000000.01",
+    "10000001",
+    "99999999.99",
+    "1" + "0" * 30,
+    "9" * 400,
 ]
 
 BAD_CATEGORIES = [
-    "Travel", "food", "FOOD", "fOOD", "Foods", "Choose a category",
-    "Food,Transport", "Food' OR '1'='1", "<b>Food</b>", "X" * 1000,
+    "Travel",
+    "food",
+    "FOOD",
+    "fOOD",
+    "Foods",
+    "Choose a category",
+    "Food,Transport",
+    "Food' OR '1'='1",
+    "<b>Food</b>",
+    "X" * 1000,
 ]
 
 BAD_DATES = [
-    "2026-13-45", "abc", "2026-02-30", "2025-02-29", "2026-00-10", "2026-09-31",
-    "20260901", "2026/09/01", "09-01-2026", "2026-09-01T00:00:00", "2026-W36-2",
-    "0000-01-01", "today", "2026-01-01 extra", "2026-01-01'; DROP TABLE expenses;--",
+    "2026-13-45",
+    "abc",
+    "2026-02-30",
+    "2025-02-29",
+    "2026-00-10",
+    "2026-09-31",
+    "20260901",
+    "2026/09/01",
+    "09-01-2026",
+    "2026-09-01T00:00:00",
+    "2026-W36-2",
+    "0000-01-01",
+    "today",
+    "2026-01-01 extra",
+    "2026-01-01'; DROP TABLE expenses;--",
     "2026-01-01" * 100,
 ]
 
@@ -1043,8 +1158,10 @@ EMPTY_FIELD_CASES = [
     pytest.param({"date": "   "}, id="date-spaces"),
     pytest.param({"date": None}, id="date-missing"),
     pytest.param({"amount": "", "category": "", "date": ""}, id="all-three-empty"),
-    pytest.param({"amount": None, "category": None, "date": None,
-                  "description": None}, id="nothing-sent"),
+    pytest.param(
+        {"amount": None, "category": None, "date": None, "description": None},
+        id="nothing-sent",
+    ),
 ]
 
 
@@ -1136,7 +1253,10 @@ class TestValidationErrors:
             auth_client, valid_form(today, amount="abc"), M_AMOUNT, today
         )
         opts = options(control(page, "category"))
-        assert [text for _v, text, _s in opts] == ["Choose a category", *SPEC_CATEGORIES]
+        assert [text for _v, text, _s in opts] == [
+            "Choose a category",
+            *SPEC_CATEGORIES,
+        ]
 
     def test_error_message_sits_at_the_top_of_the_card_before_the_form(
         self, auth_client, today
@@ -1192,33 +1312,67 @@ class TestValidationErrors:
 # Rule order                                                                  #
 # --------------------------------------------------------------------------- #
 
-ALL_BAD_AFTER_AMOUNT = {"category": "Travel", "date": "abc", "description": LONG_DESCRIPTION}
+ALL_BAD_AFTER_AMOUNT = {
+    "category": "Travel",
+    "date": "abc",
+    "description": LONG_DESCRIPTION,
+}
 
 RULE_ORDER_CASES = [
-    pytest.param({"amount": "", "category": "Travel"}, M_EMPTY,
-                 id="empty-amount-beats-bad-category"),
-    pytest.param({"amount": "", **ALL_BAD_AFTER_AMOUNT}, M_EMPTY,
-                 id="empty-amount-beats-everything"),
-    pytest.param({"date": "", "amount": "abc"}, M_EMPTY,
-                 id="empty-date-beats-bad-amount"),
-    pytest.param({"category": "", "amount": "0"}, M_EMPTY,
-                 id="empty-category-beats-zero-amount"),
-    pytest.param({"amount": "abc", **ALL_BAD_AFTER_AMOUNT}, M_AMOUNT,
-                 id="bad-amount-beats-category-date-description"),
-    pytest.param({"amount": "0.001", "date": "@+1"}, M_AMOUNT,
-                 id="three-decimals-is-a-format-error-not-zero"),
-    pytest.param({"amount": "0", **ALL_BAD_AFTER_AMOUNT}, M_ZERO,
-                 id="zero-beats-category-date-description"),
-    pytest.param({"amount": "10000000", **ALL_BAD_AFTER_AMOUNT}, M_MAX,
-                 id="too-big-beats-category-date-description"),
-    pytest.param(ALL_BAD_AFTER_AMOUNT, M_CATEGORY,
-                 id="bad-category-beats-date-description"),
-    pytest.param({"category": "Travel", "date": "@+1", "description": LONG_DESCRIPTION},
-                 M_CATEGORY, id="bad-category-beats-future-date"),
-    pytest.param({"date": "abc", "description": LONG_DESCRIPTION}, M_DATE,
-                 id="invalid-date-beats-description"),
-    pytest.param({"date": "@+1", "description": LONG_DESCRIPTION}, M_FUTURE,
-                 id="future-date-beats-description"),
+    pytest.param(
+        {"amount": "", "category": "Travel"},
+        M_EMPTY,
+        id="empty-amount-beats-bad-category",
+    ),
+    pytest.param(
+        {"amount": "", **ALL_BAD_AFTER_AMOUNT},
+        M_EMPTY,
+        id="empty-amount-beats-everything",
+    ),
+    pytest.param(
+        {"date": "", "amount": "abc"}, M_EMPTY, id="empty-date-beats-bad-amount"
+    ),
+    pytest.param(
+        {"category": "", "amount": "0"}, M_EMPTY, id="empty-category-beats-zero-amount"
+    ),
+    pytest.param(
+        {"amount": "abc", **ALL_BAD_AFTER_AMOUNT},
+        M_AMOUNT,
+        id="bad-amount-beats-category-date-description",
+    ),
+    pytest.param(
+        {"amount": "0.001", "date": "@+1"},
+        M_AMOUNT,
+        id="three-decimals-is-a-format-error-not-zero",
+    ),
+    pytest.param(
+        {"amount": "0", **ALL_BAD_AFTER_AMOUNT},
+        M_ZERO,
+        id="zero-beats-category-date-description",
+    ),
+    pytest.param(
+        {"amount": "10000000", **ALL_BAD_AFTER_AMOUNT},
+        M_MAX,
+        id="too-big-beats-category-date-description",
+    ),
+    pytest.param(
+        ALL_BAD_AFTER_AMOUNT, M_CATEGORY, id="bad-category-beats-date-description"
+    ),
+    pytest.param(
+        {"category": "Travel", "date": "@+1", "description": LONG_DESCRIPTION},
+        M_CATEGORY,
+        id="bad-category-beats-future-date",
+    ),
+    pytest.param(
+        {"date": "abc", "description": LONG_DESCRIPTION},
+        M_DATE,
+        id="invalid-date-beats-description",
+    ),
+    pytest.param(
+        {"date": "@+1", "description": LONG_DESCRIPTION},
+        M_FUTURE,
+        id="future-date-beats-description",
+    ),
 ]
 
 
@@ -1278,9 +1432,13 @@ class TestBoundaries:
     def test_maximum_amount_9999999_99_shows_as_formatted_rupees(
         self, auth_client, today
     ):
-        page = parse_page(post_add(
-            auth_client, valid_form(today, amount="9999999.99"), follow_redirects=True
-        ))
+        page = parse_page(
+            post_add(
+                auth_client,
+                valid_form(today, amount="9999999.99"),
+                follow_redirects=True,
+            )
+        )
         assert "₹9,999,999.99" in page.tokens()
         assert table_rows(page)[0][3] == "₹9,999,999.99"
 
@@ -1300,7 +1458,9 @@ class TestBoundaries:
         self, auth_client, today, description
     ):
         response = post_add(auth_client, valid_form(today, description=description))
-        assert response.status_code == 302, "A description of up to 200 characters is valid"
+        assert (
+            response.status_code == 302
+        ), "A description of up to 200 characters is valid"
         (row,) = db_rows()
         assert row["description"].strip() == description.strip()
 
@@ -1359,8 +1519,9 @@ class TestSecurity:
         assert db_rows(victim["id"]) == [], "The row went to the forged user"
         assert len(db_rows(me["id"])) == 1
 
-    @pytest.mark.parametrize("forged", ["9999", "0", "-1", "abc", "1; DROP TABLE users"],
-                             ids=_short)
+    @pytest.mark.parametrize(
+        "forged", ["9999", "0", "-1", "abc", "1; DROP TABLE users"], ids=_short
+    )
     def test_any_forged_user_id_value_is_ignored(
         self, auth_client, alice, today, forged
     ):
@@ -1382,9 +1543,7 @@ class TestSecurity:
         assert db_rows(victim["id"]) == []
         assert len(db_rows(me["id"])) == 1
 
-    def test_forged_user_id_does_not_change_a_rejected_post(
-        self, auth_client, today
-    ):
+    def test_forged_user_id_does_not_change_a_rejected_post(self, auth_client, today):
         assert_rejected(
             auth_client,
             valid_form(today, amount="abc", user_id="1"),
@@ -1407,9 +1566,9 @@ class TestSecurity:
         page = parse_page(response)
         assert payload not in page.raw, "The description reached the page unescaped"
         assert_no_active_content(page)
-        assert table_rows(page)[0][1] == payload, (
-            "The table should show the description as plain text"
-        )
+        assert (
+            table_rows(page)[0][1] == payload
+        ), "The table should show the description as plain text"
 
     def test_script_tag_in_description_appears_escaped_in_the_page_source(
         self, auth_client, today
@@ -1429,10 +1588,14 @@ class TestSecurity:
             pytest.param({"amount": ECHO_PAYLOAD}, M_AMOUNT, id="amount"),
             pytest.param({"category": ECHO_PAYLOAD}, M_CATEGORY, id="category"),
             pytest.param({"date": ECHO_PAYLOAD}, M_DATE, id="date"),
-            pytest.param({"description": ECHO_PAYLOAD, "amount": "abc"}, M_AMOUNT,
-                         id="description-with-other-error"),
-            pytest.param({"description": ECHO_PAYLOAD * 10}, M_DESC,
-                         id="description-too-long"),
+            pytest.param(
+                {"description": ECHO_PAYLOAD, "amount": "abc"},
+                M_AMOUNT,
+                id="description-with-other-error",
+            ),
+            pytest.param(
+                {"description": ECHO_PAYLOAD * 10}, M_DESC, id="description-too-long"
+            ),
         ],
     )
     def test_html_typed_into_any_field_is_escaped_when_echoed_into_the_form(
@@ -1475,20 +1638,25 @@ class TestSecurity:
         assert table_rows(parse_page(response))[0][1] == text
 
     def test_adding_still_works_after_a_sql_text_description(self, auth_client, today):
-        post_add(auth_client, valid_form(today, description="x'); DROP TABLE expenses;--"))
+        post_add(
+            auth_client, valid_form(today, description="x'); DROP TABLE expenses;--")
+        )
         post_add(auth_client, valid_form(today, description="second"))
         assert [row["description"] for row in db_rows()] == [
-            "x'); DROP TABLE expenses;--", "second",
+            "x'); DROP TABLE expenses;--",
+            "second",
         ]
 
     @pytest.mark.parametrize(
         "overrides, message",
         [
             pytest.param({"amount": "1; DROP TABLE expenses"}, M_AMOUNT, id="amount"),
-            pytest.param({"category": "Food'; DROP TABLE expenses;--"}, M_CATEGORY,
-                         id="category"),
-            pytest.param({"date": "2026-01-01'; DROP TABLE expenses;--"}, M_DATE,
-                         id="date"),
+            pytest.param(
+                {"category": "Food'; DROP TABLE expenses;--"}, M_CATEGORY, id="category"
+            ),
+            pytest.param(
+                {"date": "2026-01-01'; DROP TABLE expenses;--"}, M_DATE, id="date"
+            ),
         ],
     )
     def test_sql_text_in_other_fields_is_rejected_and_tables_survive(
@@ -1500,14 +1668,20 @@ class TestSecurity:
 
     # -- other users' data ------------------------------------------------ #
 
-    def test_each_user_sees_only_their_own_new_expenses(self, spendly_app, empty_db, today):
+    def test_each_user_sees_only_their_own_new_expenses(
+        self, spendly_app, empty_db, today
+    ):
         alice = make_user("Alice Tester", "alice@example.com")
         bob = make_user("Bob Other", "bob@example.com")
         alice_client = sign_in(spendly_app.test_client(), alice)
         bob_client = sign_in(spendly_app.test_client(), bob)
-        post_add(alice_client, valid_form(today, amount="100", description="alice-only"))
-        post_add(bob_client, valid_form(today, amount="7", category="Bills",
-                                        description="bob-only"))
+        post_add(
+            alice_client, valid_form(today, amount="100", description="alice-only")
+        )
+        post_add(
+            bob_client,
+            valid_form(today, amount="7", category="Bills", description="bob-only"),
+        )
 
         alice_page = parse_page(get_profile(alice_client))
         bob_page = parse_page(get_profile(bob_client))
@@ -1527,7 +1701,9 @@ class TestSecurity:
         demo_rows_before = db_rows(demo["id"])
         newcomer = make_user("New Person", "new@example.com")
         new_client = sign_in(spendly_app.test_client(), newcomer)
-        post_add(new_client, valid_form(today, amount="321", description="newcomer-only"))
+        post_add(
+            new_client, valid_form(today, amount="321", description="newcomer-only")
+        )
 
         demo_client = sign_in(
             spendly_app.test_client(),
@@ -1546,6 +1722,7 @@ class TestSecurity:
 # --------------------------------------------------------------------------- #
 # Other methods                                                               #
 # --------------------------------------------------------------------------- #
+
 
 class TestOtherMethods:
     @pytest.mark.parametrize("method", ["put", "patch", "delete"])
@@ -1572,6 +1749,7 @@ class TestOtherMethods:
 # --------------------------------------------------------------------------- #
 # Neighbouring placeholder routes                                             #
 # --------------------------------------------------------------------------- #
+
 
 class TestNeighbourRoutesUnchanged:
     def test_edit_expense_still_returns_its_placeholder_text(self, auth_client):
@@ -1605,6 +1783,7 @@ class TestNeighbourRoutesUnchanged:
 # Step 6 interaction: the date filter                                         #
 # --------------------------------------------------------------------------- #
 
+
 class TestDateFilterInteraction:
     @staticmethod
     def _last_month_day(today):
@@ -1615,10 +1794,13 @@ class TestDateFilterInteraction:
         self, auth_client, today
     ):
         last_month = self._last_month_day(today)
-        page = parse_page(post_add(
-            auth_client, valid_form(today, date=last_month.isoformat()),
-            follow_redirects=True,
-        ))
+        page = parse_page(
+            post_add(
+                auth_client,
+                valid_form(today, date=last_month.isoformat()),
+                follow_redirects=True,
+            )
+        )
         assert summary(page) == ("₹250.50", "1", "Food")
         assert table_rows(page)[0][0] == shown_date(last_month)
 
@@ -1650,9 +1832,16 @@ class TestDateFilterInteraction:
     ):
         last_month = self._last_month_day(today)
         post_add(auth_client, valid_form(today, amount="100", description="now"))
-        post_add(auth_client, valid_form(today, amount="40", category="Bills",
-                                         date=last_month.isoformat(),
-                                         description="before"))
+        post_add(
+            auth_client,
+            valid_form(
+                today,
+                amount="40",
+                category="Bills",
+                date=last_month.isoformat(),
+                description="before",
+            ),
+        )
         first_of_month = today.replace(day=1).isoformat()
         page = parse_page(get_profile(auth_client, date_from=first_of_month))
         ensure_same_day(today)
@@ -1681,6 +1870,7 @@ class TestDateFilterInteraction:
 # Stylesheet                                                                  #
 # --------------------------------------------------------------------------- #
 
+
 class TestStylesheet:
     def test_expense_css_is_served(self, client):
         response = client.get(url("static", filename="css/expense.css"))
@@ -1688,11 +1878,15 @@ class TestStylesheet:
         assert response.get_data(as_text=True).strip(), "expense.css is empty"
 
     def test_expense_css_starts_with_a_banner_comment(self, client):
-        css = client.get(url("static", filename="css/expense.css")).get_data(as_text=True)
+        css = client.get(url("static", filename="css/expense.css")).get_data(
+            as_text=True
+        )
         assert css.lstrip().startswith("/*"), "Expected a banner comment at the top"
 
     def test_expense_css_contains_no_hex_colour_values(self, client):
-        css = client.get(url("static", filename="css/expense.css")).get_data(as_text=True)
+        css = client.get(url("static", filename="css/expense.css")).get_data(
+            as_text=True
+        )
         assert re.findall(r"#[0-9a-fA-F]{3,8}\b", css) == []
 
 
@@ -1700,17 +1894,27 @@ class TestStylesheet:
 # The spec's "Definition of done" walk-through                                #
 # --------------------------------------------------------------------------- #
 
+
 class TestSpecWalkthrough:
     def test_register_sign_in_then_add_two_expenses(self, spendly_app, empty_db, today):
         client = spendly_app.test_client()
-        registered = client.post(url("register"), data={
-            "name": "Dana Walker", "email": "dana@example.com", "password": PASSWORD,
-        })
+        registered = client.post(
+            url("register"),
+            data={
+                "name": "Dana Walker",
+                "email": "dana@example.com",
+                "password": PASSWORD,
+            },
+        )
         assert registered.status_code == 302
         assert urlparse(registered.headers["Location"]).path == url("login")
-        signed_in = client.post(url("login"), data={
-            "email": "dana@example.com", "password": PASSWORD,
-        })
+        signed_in = client.post(
+            url("login"),
+            data={
+                "email": "dana@example.com",
+                "password": PASSWORD,
+            },
+        )
         assert signed_in.status_code == 302
         user_id = db_module.get_user_by_email("dana@example.com")["id"]
 
@@ -1718,8 +1922,11 @@ class TestSpecWalkthrough:
         profile = parse_page(get_profile(client))
         assert summary(profile) == ("₹0.00", "0", EM_DASH)
         assert table_rows(profile) == []
-        links = [a for a in profile.find_all("a")
-                 if a.attrs.get("href") == url("add_expense")]
+        links = [
+            a
+            for a in profile.find_all("a")
+            if a.attrs.get("href") == url("add_expense")
+        ]
         assert links, "The profile page should link to /expenses/add"
 
         # Open the form through the link
@@ -1728,11 +1935,15 @@ class TestSpecWalkthrough:
         assert "coming in Step 7" not in form_response.get_data(as_text=True)
 
         # First expense
-        first = parse_page(post_add(
-            client, valid_form(today, amount="250.50", category="Food",
-                               description="Lunch"),
-            follow_redirects=True,
-        ))
+        first = parse_page(
+            post_add(
+                client,
+                valid_form(
+                    today, amount="250.50", category="Food", description="Lunch"
+                ),
+                follow_redirects=True,
+            )
+        )
         assert flash_texts(first) == [FLASH_TEXT]
         assert summary(first) == ("₹250.50", "1", "Food")
         assert table_rows(first) == [[shown_date(today), "Lunch", "Food", "₹250.50"]]
@@ -1743,10 +1954,13 @@ class TestSpecWalkthrough:
         assert len(table_rows(refreshed)) == 1
 
         # Second expense, description left empty
-        second = parse_page(post_add(
-            client, valid_form(today, amount="1200", category="Bills", description=""),
-            follow_redirects=True,
-        ))
+        second = parse_page(
+            post_add(
+                client,
+                valid_form(today, amount="1200", category="Bills", description=""),
+                follow_redirects=True,
+            )
+        )
         assert summary(second) == ("₹1,450.50", "2", "Bills")
         assert [EM_DASH] == [r[1] for r in table_rows(second) if r[2] == "Bills"]
 
