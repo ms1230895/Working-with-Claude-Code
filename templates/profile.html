@@ -132,13 +132,19 @@
                                 <td>{{ expense.description or '—' }}</td>
                                 <td><span class="profile-pill">{{ expense.category }}</span></td>
                                 <td class="profile-amount">{{ expense.amount|format_money }}</td>
-                                <td>
-                                    {# Every link reads "Edit"; the label says which row it belongs to #}
+                                <td class="profile-actions">
+                                    {# Every row has the same two link texts; the labels say which row #}
                                     <a href="{{ url_for('edit_expense', expense_id=expense.id) }}"
                                        class="profile-row-action"
                                        aria-label="Edit {{ expense.description or expense.category }}, {{ expense.date|format_date }}">
                                         <i data-lucide="pencil" class="profile-icon"></i>
                                         Edit
+                                    </a>
+                                    <a href="{{ url_for('delete_expense', expense_id=expense.id) }}"
+                                       class="profile-row-action profile-row-action-danger"
+                                       aria-label="Delete {{ expense.description or expense.category }}, {{ expense.date|format_date }}">
+                                        <i data-lucide="trash-2" class="profile-icon"></i>
+                                        Delete
                                     </a>
                                 </td>
                             </tr>

@@ -197,6 +197,23 @@ def update_expense(expense_id, user_id, amount, category, date, description=None
         conn.close()
 
 
+def remove_expense(expense_id, user_id):
+    # Deletes one of the user's expenses. Returns True when a row was deleted
+    # and False when none matched: an id that does not exist, or an expense
+    # that belongs to another user. Not called delete_expense: that is the
+    # name of the view in app.py, which imports these helpers by name
+    conn = get_db()
+    try:
+        with conn:
+            cursor = conn.execute(
+                "DELETE FROM expenses WHERE id = ? AND user_id = ?",
+                (expense_id, user_id),
+            )
+        return cursor.rowcount == 1
+    finally:
+        conn.close()
+
+
 def _expense_filter(user_id, date_from=None, date_to=None):
     # Returns the WHERE text and its parameters for one user's expenses,
     # limited to a date range when one is given. Both ends are included.

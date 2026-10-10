@@ -29,6 +29,7 @@ from database.db import (
     get_user_by_email,
     get_user_by_id,
     init_db,
+    remove_expense,
     seed_db,
     update_expense,
 )
@@ -472,15 +473,27 @@ def edit_expense(expense_id):
     return redirect(url_for("profile"))
 
 
-# ------------------------------------------------------------------ #
-# Placeholder routes — students will implement these                  #
-# ------------------------------------------------------------------ #
-
-
-@app.route("/expenses/<int:id>/delete")
+@app.route("/expenses/<int:expense_id>/delete", methods=["GET", "POST"])
 @login_required
-def delete_expense(id):
-    return "Delete expense — coming in Step 9"
+def delete_expense(expense_id):
+    # Before anything else, for GET and POST alike: 404 unless the expense
+    # is the signed-in user's
+    expense = get_own_expense_or_404(expense_id)
+
+    # Only a POST deletes. A GET asks "are you sure?": links, prefetches and
+    # crawlers send GETs. Not `== "GET"`: Flask also sends HEAD to this view,
+    # and a HEAD must take this branch too
+    if request.method != "POST":
+        return render_template("expense_delete.html", expense=expense)
+
+    # The query filters on the owner again; the check above does not replace it
+    if not remove_expense(expense_id, g.user["id"]):
+        # The expense went away between the check above and this delete
+        abort(404)
+
+    # Redirect, so refreshing the next page cannot submit the form again
+    flash("Expense deleted.")
+    return redirect(url_for("profile"))
 
 
 if __name__ == "__main__":
