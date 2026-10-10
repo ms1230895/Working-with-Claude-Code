@@ -1,4 +1,5 @@
 import os
+import re
 import secrets
 import sqlite3
 from datetime import date, datetime
@@ -16,10 +17,11 @@ from flask import (
 )
 
 from database.db import (
+    CATEGORIES,
     authenticate_user,
+    create_expense,
     create_user,
     get_category_totals,
-    get_db,
     get_expense_stats,
     get_recent_expenses,
     get_user_by_email,
@@ -96,6 +98,7 @@ def format_date(value, fmt="%d %b %Y"):
 
 def parse_filter_date(text):
     # Returns a date, or None when the text is not a real YYYY-MM-DD date.
+    # The add-expense form checks its date with this too.
     # strptime, not date.fromisoformat, which also takes week dates (2026-W36-2)
     try:
         return datetime.strptime(text.strip(), "%Y-%m-%d").date()
@@ -118,6 +121,65 @@ def get_date_presets(today):
         {"label": "Last 6 months", "date_from": first_of_month(5), "date_to": end},
         {"label": "All time", "date_from": None, "date_to": None},
     ]
+
+
+# ------------------------------------------------------------------ #
+# Expense form                                                        #
+# ------------------------------------------------------------------ #
+
+# The limits the form checks; the messages below quote them
+MAX_AMOUNT = 9_999_999.99
+MAX_DESCRIPTION_LENGTH = 200
+
+# Digits, then at most two decimals. Checked before float(), which would
+# also take "nan", "inf", "1e5" and a minus sign. [0-9], not \d, which also
+# matches digits from other scripts
+AMOUNT_PATTERN = re.compile(r"[0-9]+(\.[0-9]{1,2})?")
+
+
+def check_expense_form(amount_text, category, date_text, description, today):
+    # Returns (error, amount, expense_date) for values that are already
+    # stripped. The first rule that fails decides the message. When every
+    # rule passes, error is None and the other two hold the values to save
+    if not amount_text or not category or not date_text:
+        return "Please fill in the amount, category and date.", None, None
+
+    if not AMOUNT_PATTERN.fullmatch(amount_text):
+        return "Please enter a valid amount, like 250 or 250.50.", None, None
+
+    amount = float(amount_text)
+    if amount == 0:
+        return "Amount must be greater than zero.", None, None
+    if amount > MAX_AMOUNT:
+        return f"Amount cannot be more than {format_money(MAX_AMOUNT)}.", None, None
+
+    if category not in CATEGORIES:
+        return "Please choose a category from the list.", None, None
+
+    expense_date = parse_filter_date(date_text)
+    if expense_date is None:
+        return "Please enter a valid date.", None, None
+    if expense_date > today:
+        return "The date cannot be in the future.", None, None
+
+    if len(description) > MAX_DESCRIPTION_LENGTH:
+        return (
+            f"Description cannot be longer than {MAX_DESCRIPTION_LENGTH} characters.",
+            None,
+            None,
+        )
+
+    return None, amount, expense_date
+
+
+def render_expense_form(today, **values):
+    # The add-expense page. values holds what the fields show, and the error
+    return render_template(
+        "add_expense.html",
+        categories=CATEGORIES,
+        today=today.isoformat(),
+        **values,
+    )
 
 
 # ------------------------------------------------------------------ #
@@ -281,15 +343,53 @@ def analytics():
     return render_template("analytics.html")
 
 
+@app.route("/expenses/add", methods=["GET", "POST"])
+@login_required
+def add_expense():
+    today = date.today()
+
+    if request.method == "GET":
+        return render_expense_form(today, date=today.isoformat())
+
+    amount_text = request.form.get("amount", "").strip()
+    category = request.form.get("category", "").strip()
+    date_text = request.form.get("date", "").strip()
+    description = request.form.get("description", "").strip()
+
+    error, amount, expense_date = check_expense_form(
+        amount_text, category, date_text, description, today
+    )
+
+    if error:
+        return render_expense_form(
+            today,
+            error=error,
+            # What the user typed, so nothing has to be entered again
+            amount=amount_text,
+            category=category,
+            date=date_text,
+            description=description,
+        )
+
+    # The owner is always the signed-in user, never a value from the form.
+    # The date is the parsed one written out again, so it is always
+    # zero-padded YYYY-MM-DD. An empty description is saved as NULL
+    create_expense(
+        g.user["id"],
+        amount,
+        category,
+        expense_date.isoformat(),
+        description or None,
+    )
+
+    # Redirect, so refreshing the next page cannot submit the form again
+    flash("Expense added.")
+    return redirect(url_for("profile"))
+
+
 # ------------------------------------------------------------------ #
 # Placeholder routes — students will implement these                  #
 # ------------------------------------------------------------------ #
-
-@app.route("/expenses/add")
-@login_required
-def add_expense():
-    return "Add expense — coming in Step 7"
-
 
 @app.route("/expenses/<int:id>/edit")
 @login_required

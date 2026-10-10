@@ -7,6 +7,18 @@ from werkzeug.security import check_password_hash, generate_password_hash
 # Database file lives in the project root, next to app.py
 DB_PATH = Path(__file__).resolve().parent.parent / "expense_tracker.db"
 
+# The categories an expense can have, in the order the form lists them.
+# The schema does not enforce the list; the route checks against it
+CATEGORIES = (
+    "Food",
+    "Transport",
+    "Bills",
+    "Health",
+    "Entertainment",
+    "Shopping",
+    "Other",
+)
+
 
 def get_db():
     conn = sqlite3.connect(DB_PATH)
@@ -139,6 +151,22 @@ def authenticate_user(email, password):
     if not check_password_hash(user["password_hash"], password):
         return None
     return user
+
+
+def create_expense(user_id, amount, category, date, description=None):
+    # Saves one expense and returns its id. Does not check the values: the
+    # route does that first. date is YYYY-MM-DD text
+    conn = get_db()
+    try:
+        with conn:
+            cursor = conn.execute(
+                "INSERT INTO expenses (user_id, amount, category, date, description)"
+                " VALUES (?, ?, ?, ?, ?)",
+                (user_id, amount, category, date, description),
+            )
+        return cursor.lastrowid
+    finally:
+        conn.close()
 
 
 def _expense_filter(user_id, date_from=None, date_to=None):
