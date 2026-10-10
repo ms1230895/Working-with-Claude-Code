@@ -163,6 +163,40 @@ def create_expense(user_id, amount, category, date, description=None):
         conn.close()
 
 
+def get_expense(expense_id, user_id):
+    # Returns one expense, or None. None covers both an id that does not
+    # exist and an expense that belongs to another user: the caller cannot
+    # tell them apart, and neither can the visitor
+    conn = get_db()
+    try:
+        return conn.execute(
+            "SELECT id, date, description, category, amount FROM expenses"
+            " WHERE id = ? AND user_id = ?",
+            (expense_id, user_id),
+        ).fetchone()
+    finally:
+        conn.close()
+
+
+def update_expense(expense_id, user_id, amount, category, date, description=None):
+    # Changes the four fields of one of the user's expenses. Returns True when
+    # a row was changed and False when none matched. Like create_expense(), it
+    # does not check the values. user_id and created_at are never changed
+    conn = get_db()
+    try:
+        with conn:
+            cursor = conn.execute(
+                "UPDATE expenses"
+                " SET amount = ?, category = ?, date = ?, description = ?"
+                " WHERE id = ? AND user_id = ?",
+                (amount, category, date, description, expense_id, user_id),
+            )
+        # A matched row counts even when the new values equal the old ones
+        return cursor.rowcount == 1
+    finally:
+        conn.close()
+
+
 def _expense_filter(user_id, date_from=None, date_to=None):
     # Returns the WHERE text and its parameters for one user's expenses,
     # limited to a date range when one is given. Both ends are included.

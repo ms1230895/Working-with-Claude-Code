@@ -275,7 +275,9 @@ def table_rows(page):
     for tr in page.find_all("tr"):
         cells = [td.text() for td in tr.find_all("td")]
         if cells:
-            rows.append(cells)
+            # Date, description, category, amount. The fifth cell is the
+            # Actions column (Step 8), which these tests do not look at
+            rows.append(cells[:4])
     return rows
 
 
@@ -1752,11 +1754,6 @@ class TestOtherMethods:
 
 
 class TestNeighbourRoutesUnchanged:
-    def test_edit_expense_still_returns_its_placeholder_text(self, auth_client):
-        response = auth_client.get("/expenses/1/edit")
-        assert response.status_code == 200
-        assert "Edit expense — coming in Step 8" in response.get_data(as_text=True)
-
     def test_delete_expense_still_returns_its_placeholder_text(self, auth_client):
         response = auth_client.get("/expenses/1/delete")
         assert response.status_code == 200

@@ -403,7 +403,9 @@ def expense_rows(page):
     for tr in page.find_all("tr"):
         cells = [td.text() for td in tr.find_all("td")]
         if cells:
-            rows.append(cells)
+            # Date, description, category, amount. The fifth cell is the
+            # Actions column (Step 8), which these tests do not look at
+            rows.append(cells[:4])
     return rows
 
 

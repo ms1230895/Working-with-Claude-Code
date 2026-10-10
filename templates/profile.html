@@ -122,6 +122,7 @@
                                 <th scope="col">Description</th>
                                 <th scope="col">Category</th>
                                 <th scope="col" class="profile-amount">Amount</th>
+                                <th scope="col">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -131,6 +132,15 @@
                                 <td>{{ expense.description or '—' }}</td>
                                 <td><span class="profile-pill">{{ expense.category }}</span></td>
                                 <td class="profile-amount">{{ expense.amount|format_money }}</td>
+                                <td>
+                                    {# Every link reads "Edit"; the label says which row it belongs to #}
+                                    <a href="{{ url_for('edit_expense', expense_id=expense.id) }}"
+                                       class="profile-row-action"
+                                       aria-label="Edit {{ expense.description or expense.category }}, {{ expense.date|format_date }}">
+                                        <i data-lucide="pencil" class="profile-icon"></i>
+                                        Edit
+                                    </a>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>

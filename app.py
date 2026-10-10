@@ -7,6 +7,7 @@ from functools import wraps
 
 from flask import (
     Flask,
+    abort,
     flash,
     g,
     redirect,
@@ -22,12 +23,14 @@ from database.db import (
     create_expense,
     create_user,
     get_category_totals,
+    get_expense,
     get_expense_stats,
     get_recent_expenses,
     get_user_by_email,
     get_user_by_id,
     init_db,
     seed_db,
+    update_expense,
 )
 
 app = Flask(__name__)
@@ -175,14 +178,34 @@ def check_expense_form(amount_text, category, date_text, description, today):
     return None, amount, expense_date
 
 
-def render_expense_form(today, **values):
-    # The add-expense page. values holds what the fields show, and the error
+def render_expense_form(today, expense_id=None, **values):
+    # The add-expense page, and the edit page when expense_id is given.
+    # values holds what the fields show, and the error
     return render_template(
-        "add_expense.html",
+        "expense_form.html",
         categories=CATEGORIES,
         today=today.isoformat(),
+        expense_id=expense_id,
         **values,
     )
+
+
+# The largest integer SQLite stores. sqlite3 raises OverflowError for a
+# bigger one, and the int converter in a route accepts any number of digits
+MAX_EXPENSE_ID = 2**63 - 1
+
+
+def get_own_expense_or_404(expense_id):
+    # Returns the signed-in user's expense. The id comes from the URL, so it
+    # proves nothing: an expense that is someone else's answers 404, the same
+    # as an id that does not exist
+    if expense_id > MAX_EXPENSE_ID:
+        abort(404)
+
+    expense = get_expense(expense_id, g.user["id"])
+    if expense is None:
+        abort(404)
+    return expense
 
 
 # ------------------------------------------------------------------ #
@@ -391,15 +414,67 @@ def add_expense():
     return redirect(url_for("profile"))
 
 
+@app.route("/expenses/<int:expense_id>/edit", methods=["GET", "POST"])
+@login_required
+def edit_expense(expense_id):
+    # Before anything else, for GET and POST alike: 404 unless the expense
+    # is the signed-in user's
+    expense = get_own_expense_or_404(expense_id)
+    today = date.today()
+
+    if request.method == "GET":
+        return render_expense_form(
+            today,
+            expense_id=expense_id,
+            # Two decimals, so 1200.0 shows as 1200.00
+            amount=f"{expense['amount']:.2f}",
+            category=expense["category"],
+            date=expense["date"],
+            description=expense["description"] or "",
+        )
+
+    amount_text = request.form.get("amount", "").strip()
+    category = request.form.get("category", "").strip()
+    date_text = request.form.get("date", "").strip()
+    description = request.form.get("description", "").strip()
+
+    # The same rules, in the same order, as the add-expense form
+    error, amount, expense_date = check_expense_form(
+        amount_text, category, date_text, description, today
+    )
+
+    if error:
+        return render_expense_form(
+            today,
+            expense_id=expense_id,
+            error=error,
+            amount=amount_text,
+            category=category,
+            date=date_text,
+            description=description,
+        )
+
+    # The query filters on the owner again; the check above does not replace it
+    updated = update_expense(
+        expense_id,
+        g.user["id"],
+        amount,
+        category,
+        expense_date.isoformat(),
+        description or None,
+    )
+    if not updated:
+        # The expense went away between the check above and this update
+        abort(404)
+
+    # Redirect, so refreshing the next page cannot submit the form again
+    flash("Expense updated.")
+    return redirect(url_for("profile"))
+
+
 # ------------------------------------------------------------------ #
 # Placeholder routes — students will implement these                  #
 # ------------------------------------------------------------------ #
-
-
-@app.route("/expenses/<int:id>/edit")
-@login_required
-def edit_expense(id):
-    return "Edit expense — coming in Step 8"
 
 
 @app.route("/expenses/<int:id>/delete")

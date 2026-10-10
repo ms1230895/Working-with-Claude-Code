@@ -292,7 +292,7 @@
 
 .profile-table {
     width: 100%;
-    min-width: 30rem;
+    min-width: 35rem;
     border-collapse: collapse;
     font-size: 0.875rem;
 }
@@ -346,6 +346,23 @@
     font-weight: 500;
     line-height: 1.2;
     white-space: nowrap;
+}
+
+/* A link in the Actions column: an icon and its label on one line */
+.profile-row-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-weight: 500;
+    color: var(--accent);
+    white-space: nowrap;
+}
+
+.profile-row-action:hover { text-decoration: underline; }
+
+.profile-row-action:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
 }
 
 /* ------------------------------------------------------------------ */

@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 
-{% block title %}Add expense — Spendly{% endblock %}
+{# One form for two pages. expense_id is the expense being edited; without
+   it this is the add page #}
+{% block title %}{% if expense_id %}Edit{% else %}Add{% endif %} expense — Spendly{% endblock %}
 
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/expense.css') }}">
@@ -12,8 +14,13 @@
     <div class="auth-container">
 
         <div class="auth-header">
+            {% if expense_id %}
+            <h1 class="auth-title">Edit expense</h1>
+            <p class="auth-subtitle">Change the details of this expense</p>
+            {% else %}
             <h1 class="auth-title">Add expense</h1>
             <p class="auth-subtitle">Record something you spent</p>
+            {% endif %}
         </div>
 
         <div class="auth-card">
@@ -21,7 +28,9 @@
             <div class="auth-error" role="alert">{{ error }}</div>
             {% endif %}
 
-            <form method="POST" action="{{ url_for('add_expense') }}" class="expense-form">
+            <form method="POST"
+                  action="{% if expense_id %}{{ url_for('edit_expense', expense_id=expense_id) }}{% else %}{{ url_for('add_expense') }}{% endif %}"
+                  class="expense-form">
                 <div class="form-group">
                     <label for="amount">Amount (₹)</label>
                     <input type="number" id="amount" name="amount"
@@ -55,7 +64,7 @@
                            maxlength="200"
                            value="{{ description or '' }}">
                 </div>
-                <button type="submit" class="btn-submit">Save expense</button>
+                <button type="submit" class="btn-submit">{% if expense_id %}Save changes{% else %}Save expense{% endif %}</button>
             </form>
 
             <a href="{{ url_for('profile') }}" class="expense-cancel">Cancel</a>
