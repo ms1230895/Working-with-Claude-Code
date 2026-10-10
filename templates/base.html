@@ -20,6 +20,8 @@
             </a>
             <div class="nav-links">
                 {% if g.user %}
+                <a href="{{ url_for('analytics') }}"
+                   {% if request.endpoint == 'analytics' %}class="nav-active" aria-current="page"{% endif %}>Analytics</a>
                 <a href="{{ url_for('profile') }}">{{ g.user['name'] }}</a>
                 <form method="POST" action="{{ url_for('logout') }}">
                     <button type="submit" class="nav-logout">Sign out</button>

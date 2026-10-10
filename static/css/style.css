@@ -105,6 +105,13 @@ a { color: inherit; text-decoration: none; }
 .nav-links a { color: var(--ink-muted); transition: color 0.2s; }
 .nav-links a:hover { color: var(--ink); }
 
+/* The link for the page being viewed */
+.nav-links a.nav-active {
+    color: var(--ink);
+    text-decoration: underline 2px var(--accent);
+    text-underline-offset: 0.4rem;
+}
+
 .nav-cta {
     background: var(--ink) !important;
     color: var(--paper) !important;

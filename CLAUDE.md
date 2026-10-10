@@ -35,6 +35,7 @@ There is no build step and no linter configured.
 - `/profile` accepts GET and is behind `login_required`. It renders `profile.html`. The name, email and join date come from `g.user`. `stats`, `expenses` and `categories` come from three helpers in `database/db.py`, each called with `g.user["id"]`, so a user sees only their own expenses. A user with no expenses gets `₹0.00`, `0` and `—` in the summary cards, an empty state in place of the table, and no category breakdown.
 - `/profile` takes an optional date range in the query string: `date_from` and `date_to`, both `YYYY-MM-DD`, both ends included. Either one may be left out, and an empty value counts as left out. The summary cards, the table and the category breakdown all use the same range. A value that is not a real date, or a start after the end, is not an HTTP error: the page answers 200, shows a message in the filter card and filters nothing. The range is not kept in the session.
 - `app.py` has two helpers for the filter. `parse_filter_date(text)` returns a `date`, or `None` for anything that is not a `YYYY-MM-DD` date. `get_date_presets(today)` returns the four preset ranges the page links to (This month, Last 3 months, Last 6 months, All time). The view passes `parsed.isoformat()` to the database helpers, never the text from the URL.
+- `/analytics` accepts GET and is behind `login_required`. It renders `analytics.html`, a "Coming soon" page, and passes it no data.
 - `/expenses/add`, `/expenses/<id>/edit` and `/expenses/<id>/delete` are placeholders that return a plain string. All three are behind `login_required`.
 - `app.py` registers two Jinja filters. `format_money` turns a number into `₹3,610.49`. `format_date` takes the text SQLite stores (`YYYY-MM-DD`, with or without a time) and an optional `strftime` format; the default gives `24 Sep 2026`. Templates use these filters instead of formatting amounts and dates themselves.
 - `database/db.py` is the data layer: plain `sqlite3` with parameterized queries, no ORM. `get_db()` returns a new connection with `row_factory = sqlite3.Row` and foreign keys enabled; the caller closes it. `init_db()` creates the `users` and `expenses` tables with `CREATE TABLE IF NOT EXISTS`. `seed_db()` inserts a demo user (`demo@spendly.com`, password `demo123`) with 8 sample expenses, and does nothing once `users` has a row.
@@ -45,7 +46,7 @@ There is no build step and no linter configured.
 - The database file `expense_tracker.db` is created in the project root and is gitignored. Delete it to get fresh seed data on the next start.
 - Expense categories are a fixed list: Food, Transport, Bills, Health, Entertainment, Shopping, Other. The schema does not enforce it.
 
-**Templates.** Every page extends `templates/base.html`, which owns the navbar, the footer and the global assets. It exposes four blocks: `title`, `head`, `content`, `scripts`. The footer links (Terms, Privacy) are in `base.html`, not in the individual pages. Internal links use `url_for('<endpoint>')`. The navbar reads `g.user`: a signed-out visitor sees "Sign in" and "Get started", a signed-in user sees their name, which links to `/profile`, and a "Sign out" button, which is a POST form. `base.html` also prints flashed messages at the top of `<main>`, above the `content` block.
+**Templates.** Every page extends `templates/base.html`, which owns the navbar, the footer and the global assets. It exposes four blocks: `title`, `head`, `content`, `scripts`. The footer links (Terms, Privacy) are in `base.html`, not in the individual pages. Internal links use `url_for('<endpoint>')`. The navbar reads `g.user`: a signed-out visitor sees "Sign in" and "Get started", a signed-in user sees an "Analytics" link, their name, which links to `/profile`, and a "Sign out" button, which is a POST form. The Analytics link gets `.nav-active` and `aria-current="page"` when `request.endpoint` is `analytics`; no other navbar link has an active state. `base.html` also prints flashed messages at the top of `<main>`, above the `content` block.
 
 **Styles.** `static/css/style.css` is the global stylesheet.
 
@@ -71,6 +72,7 @@ There is no build step and no linter configured.
 ## Known placeholders
 
 - The YouTube video ID in `templates/landing.html` is a placeholder.
+- `templates/analytics.html` is a stand-in built from existing classes (`.cta-*`, `.hero-badge`, `.btn-primary`). It does not follow the Figma "Coming Soon Page Wireframe" design yet.
 - `privacy@spendly.example` in `templates/privacy.html` is a placeholder address.
 - `privacy.html` names Google Fonts and unpkg as third-party services; the landing page also embeds YouTube, which it does not name.
 
