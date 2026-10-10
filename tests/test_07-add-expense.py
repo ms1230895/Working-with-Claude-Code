@@ -1754,11 +1754,6 @@ class TestOtherMethods:
 
 
 class TestNeighbourRoutesUnchanged:
-    def test_delete_expense_still_returns_its_placeholder_text(self, auth_client):
-        response = auth_client.get("/expenses/1/delete")
-        assert response.status_code == 200
-        assert "Delete expense — coming in Step 9" in response.get_data(as_text=True)
-
     @pytest.mark.parametrize("path", ["/expenses/1/edit", "/expenses/1/delete"])
     def test_edit_and_delete_signed_out_still_redirect_to_login(self, client, path):
         response = client.get(path)

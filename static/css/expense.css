@@ -1,8 +1,8 @@
 /* ------------------------------------------------------------------ */
-/* Expense form — the add page and the edit page                       */
+/* Expense pages — the add and edit form, and the delete page          */
 /* Loaded after style.css. The page layout and the inputs come from    */
-/* the .auth-* and .form-* rules there; this file holds only what the  */
-/* expense form needs on top. Uses only the tokens style.css sets on   */
+/* the .auth-* and .form-* rules there; this file holds only what      */
+/* those pages need on top. Uses only the tokens style.css sets on     */
 /* :root. Spacing moves in 0.25rem (4px) steps.                        */
 /* ------------------------------------------------------------------ */
 
@@ -28,3 +28,41 @@
     outline: 2px solid var(--accent);
     outline-offset: 2px;
 }
+
+/* The delete page lists the expense: label on the left, value on the right */
+.expense-summary { margin-bottom: 1.25rem; }
+
+.expense-summary-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border-soft);
+    font-size: 0.875rem;
+}
+
+.expense-summary-row:first-child { padding-top: 0; }
+
+.expense-summary dt {
+    flex-shrink: 0;
+    color: var(--ink-muted);
+}
+
+/* A long description without spaces wraps inside the card */
+.expense-summary dd {
+    min-width: 0;
+    font-weight: 500;
+    color: var(--ink);
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+.expense-summary-amount { font-variant-numeric: tabular-nums; }
+
+/* .btn-submit:hover turns green, which would read as "safe" here */
+.expense-delete-button {
+    margin-top: 0;
+    background: var(--danger);
+}
+
+.expense-delete-button:hover { background: var(--ink); }

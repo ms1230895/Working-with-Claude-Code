@@ -292,7 +292,7 @@
 
 .profile-table {
     width: 100%;
-    min-width: 35rem;
+    min-width: 40rem;
     border-collapse: collapse;
     font-size: 0.875rem;
 }
@@ -364,6 +364,17 @@
     outline: 2px solid var(--accent);
     outline-offset: 2px;
 }
+
+/* The Actions cell keeps its links on one line */
+.profile-table .profile-actions { white-space: nowrap; }
+
+/* The global reset leaves no space between the two links */
+.profile-row-action + .profile-row-action { margin-left: 0.75rem; }
+
+/* Delete: the same link in the warning colour */
+.profile-row-action-danger { color: var(--danger); }
+
+.profile-row-action-danger:focus-visible { outline-color: var(--danger); }
 
 /* ------------------------------------------------------------------ */
 /* Category breakdown                                                  */
